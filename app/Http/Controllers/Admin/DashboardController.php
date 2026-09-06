@@ -3,27 +3,26 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Registry;
+use App\Models\User;
+use App\Models\Room;
+use App\Models\Payment;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $totalStudents = Registry::where('role', 'student')->count();
-
-        $availableRooms = 0;
-        $totalRooms = 0;
-        $occupiedRooms = 0;
-        $maintenanceRooms = 0;
-        $occupancyRate = 0;
-        $pendingRepairs = 0;
-        $activityFeed = collect();
-        $recentPayments = collect();
+        $totalStudents = User::where('role', 'student')->count();
+        $totalRooms = Room::count();
+        $occupiedRooms = Room::where('status', 'occupied')->count();
+        $pendingPayments = Payment::where('status', 'pending')->count();
+        $totalCollected = Payment::where('status', 'verified')->sum('amount');
 
         return view('admin.dashboard', compact(
-            'totalStudents', 'availableRooms', 'totalRooms',
-            'occupiedRooms', 'maintenanceRooms', 'occupancyRate',
-            'pendingRepairs', 'activityFeed', 'recentPayments'
+            'totalStudents',
+            'totalRooms',
+            'occupiedRooms',
+            'pendingPayments',
+            'totalCollected'
         ));
     }
 }

@@ -14,27 +14,37 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'username' => 'required',
-            'password' => 'required',
+        // Validate input
+        $request->validate([
+            'username' => ['required', 'string'],
+            'password' => ['required', 'string'],
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+        // Attempt authentication
+        $credentials = [
+            'username' => $request->username,
+            'password' => $request->password,
+        ];
 
-            $user = Auth::user();
-
-            if ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard')
-                    ->with('success', 'Welcome back, ' . $user->name . '!');
-            }
-
-            return redirect()->route('dashboard')
-                ->with('success', 'Welcome, ' . $user->name . '!');
+        if (!Auth::attempt($credentials)) {
+            return back()
+                ->withErrors([
+                    'username' => 'Invalid username or password.',
+                ])
+                ->withInput($request->only('username'));
         }
 
-        return back()->withErrors([
-            'username' => 'Invalid credentials.',
-        ])->onlyInput('username');
+        // Authentication successful
+        $request->session()->regenerate();
+
+        $user = Auth::user();
+
+        // ADMIN
+        if ($user->role === 'admin') {
+            return redirect('/admin/dashboard');
+        }
+
+        // STUDENT
+        return redirect('/dashboard');
     }
 }

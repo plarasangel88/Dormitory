@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Registry;
+use App\Models\User;
 
 return [
 
@@ -62,10 +63,10 @@ return [
     */
 
     'providers' => [
-       'users' => [
-    'driver' => 'eloquent',
-    'model' => env('AUTH_MODEL', Registry::class),
-],
+    'users' => [
+        'driver' => 'eloquent',
+        'model' => env('AUTH_MODEL', User::class),
+    ],
 
         // 'users' => [
         //     'driver' => 'database',
