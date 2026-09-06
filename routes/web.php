@@ -54,7 +54,5 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     ->middleware('auth')
     ->name('payments');
 
-Route::post('/payments', [PaymentController::class, 'store'])
-    ->middleware('auth')
-    ->name('payments.store');
+
 });
