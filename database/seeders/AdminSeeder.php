@@ -10,7 +10,7 @@ class AdminSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
+       User::updateOrCreate(
             ['email' => 'admin@dormportal.com'], // unique lookup key
             [
                 'name'     => 'System Administrator',
