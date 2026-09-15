@@ -215,6 +215,11 @@
             border-color: #22c55e;
             box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
         }
+        .form-group input[readonly] {
+            background-color: #f9fafb;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
         .form-group textarea { resize: vertical; min-height: 70px; }
         .form-hint { font-size: 11.5px; color: #9ca3af; margin-top: 5px; }
         .btn-submit {
@@ -303,7 +308,7 @@
     <!-- Main content -->
     <div class="main">
         <h1>Payments 💳</h1>
-        <p class="sub">Submit a payment and track your dormitory dues.</p>
+        <p class="sub">Hi {{ auth()->user()->name }}, submit a payment and track your dormitory dues.</p>
 
         @if(session('success'))
             <div class="alert-success">{{ session('success') }}</div>
@@ -320,6 +325,10 @@
         @endif
 
         <div class="info-grid">
+            <div class="info-card">
+                <div class="label">Student</div>
+                <div class="value">{{ auth()->user()->name }}</div>
+            </div>
             <div class="info-card">
                 <div class="label">Monthly Rate</div>
                 <div class="value">₱{{ number_format($monthlyRate, 2) }}</div>
@@ -340,6 +349,12 @@
                 <div class="form-card">
                     <form action="{{ route('payments.store') }}" method="POST">
                         @csrf
+
+                        <div class="form-group">
+                            <label for="student_name">Student Name</label>
+                            <input type="text" id="student_name" value="{{ auth()->user()->name }}" readonly>
+                            <div class="form-hint">Auto-filled from your account — this payment will be recorded under your name.</div>
+                        </div>
 
                         <div class="form-group">
                             <label for="amount">Amount (₱)</label>

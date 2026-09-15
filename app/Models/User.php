@@ -33,6 +33,8 @@ class User extends Authenticatable
         'course',
         'role',
         'room_id',
+        'contact_number',
+        'status',
     ];
 
     /**

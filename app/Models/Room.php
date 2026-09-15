@@ -2,25 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Room extends Model
 {
-    use HasFactory;
-
-    protected $fillable = [
-        'room_number',
-        'monthly_rate',
-        'capacity',
-        // add whatever columns your rooms table actually has
-    ];
+    protected $fillable = ['room_number', 'capacity', 'status'];
 
     /**
-     * Get the users assigned to this room.
+     * Students (users with role=student) assigned to this room.
      */
-    public function users()
+    public function students(): HasMany
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(User::class)->where('role', 'student');
     }
 }
