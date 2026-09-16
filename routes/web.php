@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\RoomController as AdminRoomController;
@@ -39,6 +40,19 @@ Route::post('/logout', function (Request $request) {
 
     return redirect('/login');
 })->name('logout');
+
+// ---- Forgot / Reset Password ----
+Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
+    ->name('password.request');
+
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink'])
+    ->name('password.email');
+
+Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])
+    ->name('password.reset');
+
+Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])
+    ->name('password.update');
 
 
 // ===============================

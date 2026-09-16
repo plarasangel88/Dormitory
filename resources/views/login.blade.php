@@ -228,6 +228,79 @@
             background-color: #F0ECE2;
         }
 
+        /* ---------- Remember me / Forgot password row ---------- */
+        .form-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: -6px;
+            margin-bottom: 22px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .remember-me input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 17px;
+            height: 17px;
+            border: 1.5px solid #C9C3B5;
+            border-radius: 5px;
+            background: #FFFFFF;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .remember-me input[type="checkbox"]:checked {
+            background-color: var(--navy-deep);
+            border-color: var(--navy-deep);
+        }
+
+        .remember-me input[type="checkbox"]:checked::after {
+            content: "";
+            position: absolute;
+            left: 5px;
+            top: 1.5px;
+            width: 4px;
+            height: 8px;
+            border: solid var(--amber-soft);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .remember-me input[type="checkbox"]:focus-visible {
+            outline: 2.5px solid var(--amber);
+            outline-offset: 2px;
+        }
+
+        .remember-me label {
+            font-size: 13.5px;
+            color: #5B6478;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--navy-deep);
+            text-decoration: none;
+            border-bottom: 1.5px solid var(--amber);
+            padding-bottom: 1px;
+            transition: color 0.15s ease;
+        }
+
+        .forgot-link:hover {
+            color: var(--navy-mid);
+        }
+
         .btn-submit {
             width: 100%;
             padding: 13px;
@@ -384,6 +457,14 @@
                             </svg>
                         </span>
                     </div>
+                </div>
+
+                <div class="form-meta-row">
+                    <div class="remember-me">
+                        <input type="checkbox" id="remember" name="remember">
+                        <label for="remember">Remember me</label>
+                    </div>
+                    <a href="{{ route('password.request') }}" class="forgot-link">Forgot password?</a>
                 </div>
 
                 <button type="submit" class="btn-submit">Log In</button>
