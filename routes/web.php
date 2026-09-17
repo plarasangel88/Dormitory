@@ -124,6 +124,9 @@ Route::middleware(['auth', 'admin'])
         // ---- Rooms ----
         Route::get('/rooms', [AdminRoomController::class, 'index'])
             ->name('admin.rooms.index');
+            
+        Route::get('/rooms/{room}', [AdminRoomController::class, 'show'])
+            ->name('admin.rooms.show');
 
         Route::post('/rooms', [AdminRoomController::class, 'store'])
             ->name('admin.rooms.store');

@@ -526,6 +526,11 @@
                     </select>
                 </div>
 
+                <div class="form-group">
+                    <label for="contact_number">Contact Number</label>
+                    <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number', auth()->user()->contact_number) }}" placeholder="e.g. 0917 123 4567">
+                </div>
+
                 <div class="account-facts">
                     <div class="info-row">
                         <span class="label">Username</span>
