@@ -3,40 +3,52 @@
 namespace App\Http\Controllers;
 
 use App\Models\MaintenanceRequest;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class MaintenanceController extends Controller
 {
-    public function index()
+    /**
+     * Show the maintenance page: submission form + the authenticated
+     * student's own request history.
+     */
+    public function index(): View
     {
-        $requests = MaintenanceRequest::with('room')
-            ->where('user_id', Auth::id())
+        $userId = auth()->id();
+
+        $requests = MaintenanceRequest::forUser($userId)
             ->latest()
-            ->paginate(10);
+            ->get();
 
-        return view('maintenance.index', compact('requests'));
+        $pendingCount    = MaintenanceRequest::forUser($userId)->status('pending')->count();
+        $inProgressCount = MaintenanceRequest::forUser($userId)->status('in_progress')->count();
+        $resolvedCount   = MaintenanceRequest::forUser($userId)->status('resolved')->count();
+
+        return view('maintenance', [
+            'requests'        => $requests,
+            'totalCount'      => $requests->count(),
+            'pendingCount'    => $pendingCount,
+            'inProgressCount' => $inProgressCount,
+            'resolvedCount'   => $resolvedCount,
+        ]);
     }
 
-    public function create()
-    {
-        $rooms = Auth::user()->rooms ?? \App\Models\Room::all();
-
-        return view('maintenance.create', compact('rooms'));
-    }
-
-    public function store(Request $request)
+    /**
+     * Store a newly submitted maintenance request for the authenticated user.
+     */
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'room_id'     => 'required|exists:rooms,id',
-            'title'       => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'priority'    => 'required|in:low,medium,high',
+            'category'    => ['required', 'string', 'max:100'],
+            'title'       => ['required', 'string', 'max:150'],
+            'description' => ['required', 'string', 'max:2000'],
+            'priority'    => ['required', 'in:low,medium,high'],
         ]);
 
         MaintenanceRequest::create([
-            'user_id'     => Auth::id(),
-            'room_id'     => $validated['room_id'],
+            'user_id'     => auth()->id(),
+            'category'    => $validated['category'],
             'title'       => $validated['title'],
             'description' => $validated['description'],
             'priority'    => $validated['priority'],
@@ -45,15 +57,6 @@ class MaintenanceController extends Controller
 
         return redirect()
             ->route('maintenance.index')
-            ->with('success', 'Maintenance request submitted successfully.');
-    }
-
-    public function show(MaintenanceRequest $maintenance)
-    {
-        abort_unless($maintenance->user_id === Auth::id(), 403);
-
-        $maintenance->load('room');
-
-        return view('maintenance.show', compact('maintenance'));
+            ->with('success', 'Your maintenance request has been submitted.');
     }
 }

@@ -17,12 +17,17 @@ class DashboardController extends Controller
         $pendingPayments = Payment::where('status', 'pending')->count();
         $totalCollected = Payment::where('status', 'verified')->sum('amount');
 
+        $occupancyRate = $totalRooms > 0
+            ? round(($occupiedRooms / $totalRooms) * 100, 1)
+            : 0;
+
         return view('admin.dashboard', compact(
             'totalStudents',
             'totalRooms',
             'occupiedRooms',
             'pendingPayments',
-            'totalCollected'
+            'totalCollected',
+            'occupancyRate'
         ));
     }
 }

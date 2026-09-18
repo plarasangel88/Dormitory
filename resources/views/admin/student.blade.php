@@ -268,6 +268,21 @@
             gap: 10px;
         }
 
+        /* Danger alert variant — used for room-capacity / validation errors */
+        .alert-danger {
+            background-color: var(--danger-tint);
+            color: #A8412B;
+            border: 1px solid rgba(196, 87, 62, 0.3);
+            border-radius: 10px;
+            padding: 12px 18px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
         /* Toolbar */
         .toolbar {
             display: flex;
@@ -681,6 +696,12 @@
                     <div class="alert-success"><i class="fa-solid fa-circle-check"></i> {{ session('success') }}</div>
                 @endif
 
+                {{-- Top-of-page fallback: shows the room-capacity error even if the
+                     auto-reopen script below doesn't fire for some reason. --}}
+                @error('room_id')
+                    <div class="alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ $message }}</div>
+                @enderror
+
                 <div class="toolbar">
                     <form method="GET" class="search-bar">
                         <i class="fa-solid fa-magnifying-glass"></i>
@@ -762,11 +783,18 @@
                                             <form action="{{ route('admin.students.update', $student) }}" method="POST">
                                                 @csrf
                                                 @method('PUT')
+                                                {{-- Lets the page know which edit modal to reopen if this
+                                                     submission comes back with a validation error. --}}
+                                                <input type="hidden" name="_editing_student_id" value="{{ $student->id }}">
                                                 <div class="modal-header">
                                                     <h3><i class="fa-solid fa-user-pen"></i> Edit Student</h3>
                                                     <button type="button" class="modal-close" onclick="closeModal('editStudentModal{{ $student->id }}')">✕</button>
                                                 </div>
                                                 <div class="modal-body">
+                                                    @error('room_id')
+                                                        <div class="alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ $message }}</div>
+                                                    @enderror
+
                                                     <div class="form-group">
                                                         <label class="form-label">Full Name</label>
                                                         <input type="text" name="name" class="form-control" value="{{ $student->name }}" required>
@@ -837,32 +865,38 @@
                     <button type="button" class="modal-close" onclick="closeModal('addStudentModal')">✕</button>
                 </div>
                 <div class="modal-body">
+                    @error('room_id')
+                        <div class="alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ $message }}</div>
+                    @enderror
+
                     <div class="form-group">
                         <label class="form-label">Full Name</label>
-                        <input type="text" name="name" class="form-control" required>
+                        <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" required>
+                        <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Contact Number</label>
-                        <input type="text" name="contact_number" class="form-control">
+                        <input type="text" name="contact_number" class="form-control" value="{{ old('contact_number') }}">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Room</label>
                         <select name="room_id" class="form-select">
                             <option value="">Unassigned</option>
                             @foreach ($rooms as $room)
-                                <option value="{{ $room->id }}">{{ $room->room_number }}</option>
+                                <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
+                                    {{ $room->room_number }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Status</label>
                         <select name="status" class="form-select">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
+                            <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -891,6 +925,16 @@
                 if (e.target === overlay) overlay.classList.remove('open');
             });
         });
+
+        // If the page reloaded with a room_id validation error (e.g. room is full),
+        // automatically reopen whichever modal the admin was using so they see the alert.
+        @if ($errors->has('room_id'))
+            @if (old('_editing_student_id'))
+                openModal('editStudentModal{{ old('_editing_student_id') }}');
+            @else
+                openModal('addStudentModal');
+            @endif
+        @endif
     </script>
 </body>
 </html>

@@ -3,387 +3,849 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maintenance Request Details — Admin</title>
+    <title>Manage Maintenance - Dorm Portal</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
+            /* Theme base */
             --navy-deep: #16213E;
             --navy-mid: #24345C;
             --navy-soft: #3A4E7A;
             --amber: #F0A857;
             --amber-soft: #F6C98B;
-            --amber-tint: #FCEEDA;
+            --amber-tint: #FBEBD4;
+            --amber-deep: #A9721F;
             --paper: #FBF8F2;
             --ink: #2A2620;
             --slate: #8993A8;
-            --line: #E7E2D6;
-            --green: #6FAE8C;
-            --green-tint: #E7F3ED;
-            --red: #D97066;
-            --red-tint: #FBEAE8;
-            --blue: #5B84C4;
-            --blue-tint: #E9EFFA;
+
+            /* Mapped app tokens */
+            --bg-main: var(--paper);
+            --sidebar-bg: var(--navy-deep);
+            --card-bg: #FFFFFF;
+            --text-primary: var(--ink);
+            --text-secondary: var(--slate);
+            --border-color: #E3DFD5;
+
+            /* Status & Accent Colors */
+            --primary-blue: var(--navy-soft);
+            --primary-hover: var(--navy-mid);
+            --success-green: #4E9A6B;
+            --warning-orange: var(--amber);
+            --danger-red: #C4573E;
+            --purple-accent: #7C6FA6;
+            --teal-accent: #3E8E8A;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; font-family: 'Inter', sans-serif; color: var(--ink); }
-        body { display: flex; min-height: 100vh; background-color: var(--paper); }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-        /* ---------- Sidebar ---------- */
-        .sidebar-wrapper { position: relative; flex-shrink: 0; }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
         .sidebar {
-            width: 260px; height: 100vh; position: sticky; top: 0;
-            background: linear-gradient(180deg, #1B2A4D 0%, #16213E 60%, #101A33 100%);
-            padding: 30px 0; display: flex; flex-direction: column;
-            transition: width 0.25s ease, padding 0.25s ease; overflow: hidden; white-space: nowrap;
+            width: 260px;
+            background: linear-gradient(180deg, #1B2A4D 0%, #16213E 55%, #101A33 100%);
+            color: #FFF;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            flex-shrink: 0;
         }
-        .sidebar.collapsed { width: 78px; padding: 30px 0; }
-        .sidebar .logo {
-            display: flex; align-items: center; gap: 11px; padding: 0 24px 24px;
-            border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 22px;
-        }
-        .sidebar .logo .key-badge {
-            width: 34px; height: 34px; border-radius: 9px;
-            background: rgba(240, 168, 87, 0.14); border: 1px solid rgba(240, 168, 87, 0.3);
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
-        .sidebar .logo-text { font-family: 'Fraunces', serif; font-weight: 500; font-size: 16.5px; color: var(--paper); }
-        .sidebar.collapsed .logo-text { display: none; }
-        .sidebar nav { display: flex; flex-direction: column; gap: 2px; }
-        .sidebar nav a {
-            display: flex; align-items: center; gap: 13px; padding: 12px 24px; margin: 0 10px;
-            border-radius: 9px; color: #AEB8D4; text-decoration: none; font-size: 13.5px; font-weight: 500;
-            transition: all 0.18s ease;
-        }
-        .sidebar nav a .link-icon { width: 20px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: inherit; }
-        .sidebar nav a .link-icon svg { display: block; }
-        .sidebar nav a:hover { background-color: rgba(255,255,255,0.06); color: var(--paper); }
-        .sidebar nav a.active { background-color: rgba(240, 168, 87, 0.14); color: var(--amber-soft); font-weight: 600; }
-        .sidebar.collapsed nav a { justify-content: center; padding: 12px 0; margin: 0 14px; }
-        .sidebar.collapsed nav a .link-text { display: none; }
-        .sidebar .logout-form { margin-top: auto; padding: 18px 24px 0; }
-        .sidebar.collapsed .logout-form { padding: 18px 16px 0; }
-        .btn-logout {
-            width: 100%; padding: 11px; background-color: transparent; color: #AEB8D4;
-            border: 1.5px solid rgba(255,255,255,0.16); border-radius: 8px; font-size: 13px; font-weight: 600;
-            font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s ease;
-        }
-        .btn-logout:hover { background-color: rgba(240, 90, 90, 0.12); color: #F19A9A; border-color: rgba(240, 90, 90, 0.35); }
-        .toggle-btn {
-            position: absolute; top: 30px; right: -14px; width: 28px; height: 28px;
-            background-color: var(--amber); color: var(--navy-deep); border: none; border-radius: 50%;
-            cursor: pointer; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 8px rgba(240, 168, 87, 0.4); transition: background-color 0.15s ease, transform 0.25s ease; z-index: 10;
-        }
-        .toggle-btn:hover { background-color: var(--amber-soft); }
-        .sidebar.collapsed .toggle-btn { transform: rotate(180deg); }
 
-        /* ---------- Main content ---------- */
-        .main { flex: 1; padding: 44px 56px 56px; max-width: 1000px; }
-        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
-        .back-link {
-            display: inline-flex; align-items: center; gap: 6px; color: var(--slate); text-decoration: none;
-            font-size: 13px; font-weight: 600; transition: color 0.15s ease;
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Fraunces', serif;
+            font-weight: 500;
+            font-size: 1.25rem;
+            margin-bottom: 32px;
+            padding-left: 8px;
+            color: var(--amber);
         }
-        .back-link:hover { color: var(--navy-deep); }
-        .admin-chip {
-            display: flex; align-items: center; gap: 10px; background: #ffffff; border: 1px solid var(--line);
-            border-radius: 30px; padding: 6px 16px 6px 6px; box-shadow: 0 2px 8px rgba(22, 33, 62, 0.04);
-        }
-        .admin-avatar {
-            width: 32px; height: 32px; border-radius: 50%; background: var(--navy-deep); color: var(--amber-soft);
-            font-family: 'Fraunces', serif; font-weight: 600; font-size: 13px;
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
-        .admin-info { display: flex; flex-direction: column; line-height: 1.25; }
-        .admin-name { font-size: 13px; font-weight: 600; color: var(--navy-deep); }
-        .admin-role { font-size: 10.5px; color: var(--slate); text-transform: uppercase; letter-spacing: 0.04em; }
 
-        .page-head {
-            margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
         }
-        .page-head .eyebrow-mark { width: 30px; height: 3px; background: var(--amber); margin-bottom: 16px; }
-        .main h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 26px; color: var(--navy-deep); margin-bottom: 8px; }
-        .main p.sub { color: var(--slate); font-size: 14px; }
 
-        .badge {
-            display: inline-block; padding: 5px 13px; border-radius: 20px; font-size: 11.5px;
-            font-weight: 700; letter-spacing: 0.02em; white-space: nowrap;
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #B7C0D6;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
         }
-        .badge-pending { background: var(--amber-tint); color: #A16A20; }
-        .badge-in_progress { background: var(--blue-tint); color: var(--blue); }
-        .badge-completed { background: var(--green-tint); color: #3E6E58; }
-        .badge-rejected { background: var(--red-tint); color: var(--red); }
-        .badge-priority-low { background: #EEF1F6; color: var(--slate); }
-        .badge-priority-medium { background: var(--amber-tint); color: #A16A20; }
-        .badge-priority-high { background: var(--red-tint); color: var(--red); }
+
+        .menu-item:hover, .menu-item.active {
+            background-color: rgba(240, 168, 87, 0.14);
+            color: #FFF;
+        }
+
+        .menu-item.active {
+            box-shadow: inset 3px 0 0 var(--amber);
+        }
+
+        .sidebar-footer {
+            padding-top: 16px;
+            border-top: 1px solid #334155;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid #334155;
+            color: #94A3B8;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .logout-btn:hover {
+            color: #FFF;
+            background-color: var(--danger-red);
+            border-color: var(--danger-red);
+        }
+
+        /* Main Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 32px;
+            background-color: #FFF;
+            border-bottom: 1px solid var(--border-color);
+            gap: 16px;
+        }
+
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: var(--paper);
+            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            border-radius: 20px;
+            width: 360px;
+            max-width: 100%;
+            color: var(--text-secondary);
+        }
+
+        .search-bar input {
+            border: none;
+            background: transparent;
+            outline: none;
+            width: 100%;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .search-bar input::placeholder {
+            color: #B7B2A6;
+        }
+
+        .admin-profile-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--navy-deep);
+            color: var(--amber);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-family: 'Fraunces', serif;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-role {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            color: var(--text-secondary);
+        }
+
+        /* Page Container */
+        .dashboard-body {
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .welcome-banner {
+            margin-bottom: 24px;
+        }
+
+        .welcome-banner h1 {
+            font-family: 'Fraunces', serif;
+            font-weight: 500;
+            font-size: 1.8rem;
+            color: var(--text-primary);
+        }
+
+        .welcome-banner p {
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-size: 0.92rem;
+        }
+
+        /* Alerts */
+        .alert {
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
         .alert-success {
-            background: var(--green-tint); border: 1px solid var(--green); color: #3E6E58;
-            padding: 12px 18px; border-radius: 8px; font-size: 13.5px; margin-bottom: 22px;
+            background: #E1EFE6;
+            color: #327049;
+            border: 1px solid rgba(78, 154, 107, 0.3);
         }
 
-        .grid-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 22px; align-items: start; }
-
-        .card {
-            background: #ffffff; border: 1px solid var(--line); border-radius: 12px; padding: 26px;
+        .alert-error {
+            background: #F6E2DD;
+            color: #A8412B;
+            border: 1px solid rgba(196, 87, 62, 0.3);
         }
-        .card + .card { margin-top: 22px; }
-        .card .card-title {
-            font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate);
-            font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+
+        /* Stat Cards */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
         }
-        .card .card-title::before { content: ""; width: 4px; height: 13px; background-color: var(--amber); border-radius: 2px; }
 
-        .detail-row { display: flex; justify-content: space-between; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
-        .detail-row:last-child { border-bottom: none; }
-        .detail-row .k { color: var(--slate); font-weight: 500; }
-        .detail-row .v { color: var(--ink); font-weight: 600; text-align: right; }
+        .stat-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 1px 2px rgba(22, 33, 62, 0.04);
+        }
 
-        .desc-text { font-size: 13.5px; line-height: 1.7; color: var(--ink); }
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.05rem;
+            flex-shrink: 0;
+        }
 
-        label { display: block; font-size: 12.5px; font-weight: 700; color: var(--navy-deep); margin-bottom: 7px; }
-        select, textarea {
-            width: 100%; padding: 11px 13px; border: 1.4px solid var(--line); border-radius: 8px;
-            font-family: 'Inter', sans-serif; font-size: 13.5px; color: var(--ink); background: var(--paper);
+        .stat-icon.pending { background: var(--amber-tint); color: var(--amber-deep); }
+        .stat-icon.in_progress { background: #E4E1F2; color: var(--purple-accent); }
+        .stat-icon.completed { background: #E1EFE6; color: #327049; }
+        .stat-icon.rejected { background: #F6E2DD; color: #A8412B; }
+
+        .stat-value { font-size: 1.3rem; font-weight: 700; color: var(--navy-deep); font-family: 'Fraunces', serif; }
+        .stat-label { font-size: 0.74rem; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+
+        /* Filter tabs */
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text-secondary);
+            background: var(--paper);
+            border: 1px solid var(--border-color);
+            transition: all 0.15s ease;
+        }
+
+        .filter-tab:hover { border-color: var(--amber); color: var(--navy-deep); }
+
+        .filter-tab.active {
+            background: var(--navy-deep);
+            color: #FFF;
+            border-color: var(--navy-deep);
+        }
+
+        /* Panels */
+        .card-panel {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 2px rgba(22, 33, 62, 0.04);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .card-panel h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-panel h3 i {
+            color: var(--amber);
+        }
+
+        /* Table */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            vertical-align: middle;
+        }
+
+        .data-table th {
+            color: var(--text-secondary);
+            font-weight: 700;
+            font-size: 0.7rem;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .data-table tbody tr:last-child td { border-bottom: none; }
+        .data-table tbody tr:hover { background: #FCFAF6; }
+
+        .row-cell { display: flex; align-items: center; gap: 12px; }
+
+        .row-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: var(--amber-tint);
+            color: var(--amber-deep);
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .row-title { font-weight: 600; color: var(--navy-deep); }
+        .row-sub { color: var(--text-secondary); font-size: 0.75rem; margin-top: 1px; }
+
+        .issue-desc {
+            max-width: 260px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            display: inline-block;
+            text-transform: capitalize;
+        }
+
+        .status-pill.pending { background-color: #FBEBD4; color: #A9721F; }
+        .status-pill.in_progress { background-color: #E4E1F2; color: #5B4E8C; }
+        .status-pill.completed { background-color: #E1EFE6; color: #327049; }
+        .status-pill.rejected { background-color: #F6E2DD; color: #A8412B; }
+
+        .priority-pill {
+            display: inline-block;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 8px;
+            text-transform: capitalize;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .priority-pill.high { background: #F6E2DD; color: #A8412B; }
+        .priority-pill.medium { background: #FBEBD4; color: #A9721F; }
+        .priority-pill.low { background: #E1EFE6; color: #327049; }
+
+        .icon-btn {
+            padding: 7px 9px;
+            border: 1px solid var(--border-color);
+            background-color: var(--paper);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .icon-btn:hover { background-color: var(--navy-deep); color: #FFF; border-color: var(--navy-deep); }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .pagination-wrap { margin-top: 18px; display: flex; justify-content: flex-end; }
+        .pagination-wrap nav { font-size: 0.8rem; }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(22, 33, 62, 0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal-card {
+            background: var(--paper);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 30px 70px -28px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-header h3 {
+            font-family: 'Fraunces', serif;
+            font-weight: 500;
+            font-size: 1.15rem;
+            color: var(--navy-deep);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-header h3 i { color: var(--amber); }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .modal-body { padding: 20px 24px; }
+
+        .req-description-view {
+            background: #FFF;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--navy-deep);
+            margin-bottom: 6px;
+        }
+
+        .form-control, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            background: #FFF;
+            outline: none;
             transition: border-color 0.15s ease;
+            resize: vertical;
         }
-        select:focus, textarea:focus { outline: none; border-color: var(--amber); }
-        textarea { resize: vertical; min-height: 90px; }
-        .field { margin-bottom: 18px; }
-        .field:last-of-type { margin-bottom: 0; }
+
+        .form-control:focus, .form-select:focus { border-color: var(--amber); }
+
+        .field-error { color: var(--danger-red); font-size: 0.72rem; margin-top: 5px; }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px 22px;
+        }
+
+        .btn-light {
+            background: #FFF;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-light:hover { background: #F0ECE2; }
 
         .btn-save {
-            width: 100%; padding: 12px; margin-top: 20px; background: var(--navy-deep); color: var(--amber-soft);
-            border: none; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13.5px; font-weight: 700;
-            cursor: pointer; transition: background 0.15s ease;
+            background: var(--navy-deep);
+            border: none;
+            color: var(--paper);
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
         }
+
         .btn-save:hover { background: var(--navy-mid); }
 
-        .btn-delete {
-            width: 100%; padding: 12px; margin-top: 10px; background: transparent; color: var(--red);
-            border: 1.5px solid var(--red-tint); border-radius: 8px; font-family: 'Inter', sans-serif;
-            font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease;
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; }
+            .sidebar-menu { flex-direction: row; flex-wrap: wrap; }
+            .top-header { flex-wrap: wrap; }
+            .search-bar { width: 100%; }
+            .dashboard-body { padding: 24px 20px; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
         }
-        .btn-delete:hover { background: var(--red-tint); border-color: var(--red); }
 
-        @media (max-width: 860px) {
-            body { flex-direction: column; }
-            .sidebar {
-                width: 100%; height: auto; position: relative; flex-direction: row;
-                align-items: center; padding: 16px 20px; overflow-x: auto;
-            }
-            .sidebar .logo { border-bottom: none; margin-bottom: 0; padding: 0 16px 0 0; }
-            .sidebar nav { flex-direction: row; }
-            .sidebar .logout-form { margin-top: 0; padding: 0 0 0 12px; }
-            .toggle-btn { display: none; }
-            .main { padding: 32px 24px 48px; }
-            .grid-layout { grid-template-columns: 1fr; }
+        @media (max-width: 560px) {
+            .stat-grid { grid-template-columns: 1fr; }
+            .issue-desc { max-width: 140px; }
         }
     </style>
 </head>
 <body>
-
-    <!-- Sidebar -->
-    <div class="sidebar-wrapper">
-        <div class="sidebar" id="sidebar">
-            <button class="toggle-btn" id="toggleBtn" title="Toggle sidebar">◀</button>
-            <div class="logo">
-                <div class="key-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="8" cy="15" r="4"></circle>
-                        <path d="M10.5 12.5L19 4M19 4h-4M19 4v4"></path>
-                    </svg>
-                </div>
-                <span class="logo-text">Dorm Portal</span>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-building-user"></i>
+                <span>Dorm Portal</span>
             </div>
-            <nav>
-                <a href="{{ route('admin.dashboard') }}">
-                    <span class="link-icon">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 10.5 12 3l9 7.5"></path>
-                            <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"></path>
-                        </svg>
-                    </span>
-                    <span class="link-text">Dashboard</span>
+            <nav class="sidebar-menu">
+                <a href="{{ route('admin.dashboard') }}" class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                    <i class="fa-solid fa-house"></i> Dashboard
                 </a>
-                <a href="{{ route('admin.students.index') }}">
-                    <span class="link-icon">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 10 12 5 2 10l10 5 10-5Z"></path>
-                            <path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"></path>
-                        </svg>
-                    </span>
-                    <span class="link-text">Students</span>
+                <a href="{{ route('admin.students.index') }}" class="menu-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-user-graduate"></i> Students
                 </a>
-                <a href="{{ route('admin.rooms.index') }}">
-                    <span class="link-icon">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 18v-6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v6"></path>
-                            <path d="M2 18h20"></path>
-                            <path d="M6 10V6.5A1.5 1.5 0 0 1 7.5 5h4A1.5 1.5 0 0 1 13 6.5V10"></path>
-                        </svg>
-                    </span>
-                    <span class="link-text">Rooms</span>
+                <a href="{{ route('admin.rooms.index') }}" class="menu-item {{ request()->routeIs('admin.rooms.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-door-closed"></i> Rooms
                 </a>
-                <a href="{{ route('admin.payments.index') }}">
-                    <span class="link-icon">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                            <path d="M2 10h20"></path>
-                        </svg>
-                    </span>
-                    <span class="link-text">Payments</span>
+                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->is('admin/payments*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-wallet"></i> Payments
                 </a>
-                <a href="{{ route('admin.maintenance.index') }}" class="active">
-                    <span class="link-icon">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.4-3.4a5 5 0 0 1-6.7 6.7l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a5 5 0 0 1 6.7-6.7z"></path>
-                        </svg>
-                    </span>
-                    <span class="link-text">Maintenance</span>
+                <a href="/admin/maintenance" class="menu-item {{ request()->is('admin/maintenance*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-wrench"></i> Maintenance
                 </a>
-                <a href="/admin/profile">
-                    <span class="link-icon">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-1.5a5 5 0 0 0-5-5H9a5 5 0 0 0-5 5V21"></path>
-                            <circle cx="12" cy="7.5" r="4"></circle>
-                        </svg>
-                    </span>
-                    <span class="link-text">Profile</span>
+                <a href="/admin/profile" class="menu-item {{ request()->is('admin/profile*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-circle-user"></i> Profile
                 </a>
             </nav>
-            <div class="logout-form">
-                <form action="/logout" method="POST">
+            <div class="sidebar-footer">
+                <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="btn-logout">Logout</button>
+                    <button type="submit" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
                 </form>
             </div>
-        </div>
-    </div>
+        </aside>
 
-    <!-- Main content -->
-    <div class="main">
-        <div class="topbar">
-            <a href="{{ route('admin.maintenance.index') }}" class="back-link">← Back to all requests</a>
-            <div class="admin-chip">
-                <div class="admin-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
-                <div class="admin-info">
-                    <span class="admin-name">{{ auth()->user()->name }}</span>
-                    <span class="admin-role">Admin</span>
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Header Bar -->
+            <header class="top-header">
+                <form method="GET" class="search-bar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by student or room...">
+                </form>
+                <div class="admin-profile-badge">
+                    <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+                    <div class="user-info">
+                        <span class="user-name">{{ auth()->user()->name }}</span>
+                        <span class="user-role">ADMIN</span>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </header>
 
-        <div class="page-head">
-            <div>
-                <div class="eyebrow-mark"></div>
-                <h1>{{ $maintenance->title }}</h1>
-                <p class="sub">Submitted {{ $maintenance->created_at->format('M d, Y \a\t g:i A') }}</p>
-            </div>
-            <span class="badge badge-{{ $maintenance->status }}">
-                {{ ucfirst(str_replace('_', ' ', $maintenance->status)) }}
-            </span>
-        </div>
-
-        @if (session('success'))
-            <div class="alert-success">{{ session('success') }}</div>
-        @endif
-
-        <div class="grid-layout">
-            <!-- Left column: details -->
-            <div>
-                <div class="card">
-                    <div class="card-title">Request Info</div>
-                    <div class="detail-row">
-                        <span class="k">Student</span>
-                        <span class="v">{{ $maintenance->user->name ?? '—' }}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="k">Room</span>
-                        <span class="v">{{ $maintenance->room->room_number ?? $maintenance->room->name ?? '—' }}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="k">Priority</span>
-                        <span class="v">
-                            <span class="badge badge-priority-{{ $maintenance->priority }}">
-                                {{ ucfirst($maintenance->priority) }}
-                            </span>
-                        </span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="k">Submitted</span>
-                        <span class="v">{{ $maintenance->created_at->format('M d, Y') }}</span>
-                    </div>
-                    @if ($maintenance->resolved_at)
-                        <div class="detail-row">
-                            <span class="k">Resolved</span>
-                            <span class="v">{{ $maintenance->resolved_at->format('M d, Y') }}</span>
-                        </div>
-                        <div class="detail-row">
-                            <span class="k">Resolved By</span>
-                            <span class="v">{{ $maintenance->resolvedBy->name ?? '—' }}</span>
-                        </div>
-                    @endif
+            <!-- Page Content -->
+            <div class="dashboard-body">
+                <div class="welcome-banner">
+                    <h1>Manage Maintenance Requests</h1>
+                    <p>Review student maintenance requests and update their status as work progresses.</p>
                 </div>
 
-                <div class="card">
-                    <div class="card-title">Description</div>
-                    <p class="desc-text">{{ $maintenance->description }}</p>
-                </div>
-
-                @if ($maintenance->admin_notes)
-                    <div class="card">
-                        <div class="card-title">Admin Notes</div>
-                        <p class="desc-text">{{ $maintenance->admin_notes }}</p>
-                    </div>
+                @if (session('success'))
+                    <div class="alert alert-success"><i class="fa-solid fa-circle-check"></i> {{ session('success') }}</div>
                 @endif
-            </div>
+                @if (session('error'))
+                    <div class="alert alert-error"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</div>
+                @endif
 
-            <!-- Right column: update form -->
-            <div>
-                <div class="card">
-                    <div class="card-title">Update Request</div>
-                    <form action="{{ route('admin.maintenance.update', $maintenance) }}" method="POST">
-                        @csrf
-                        @method('PUT')
-
-                        <div class="field">
-                            <label for="status">Status</label>
-                            <select name="status" id="status">
-                                <option value="pending" @selected($maintenance->status === 'pending')>Pending</option>
-                                <option value="in_progress" @selected($maintenance->status === 'in_progress')>In Progress</option>
-                                <option value="completed" @selected($maintenance->status === 'completed')>Completed</option>
-                                <option value="rejected" @selected($maintenance->status === 'rejected')>Rejected</option>
-                            </select>
+                <!-- Stat Cards -->
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon pending"><i class="fa-solid fa-hourglass-half"></i></div>
+                        <div>
+                            <div class="stat-value">{{ $counts['pending'] }}</div>
+                            <div class="stat-label">Pending</div>
                         </div>
-
-                        <div class="field">
-                            <label for="admin_notes">Admin Notes</label>
-                            <textarea name="admin_notes" id="admin_notes" placeholder="Add notes for this request...">{{ old('admin_notes', $maintenance->admin_notes) }}</textarea>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon in_progress"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                        <div>
+                            <div class="stat-value">{{ $counts['in_progress'] }}</div>
+                            <div class="stat-label">In Progress</div>
                         </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon completed"><i class="fa-solid fa-circle-check"></i></div>
+                        <div>
+                            <div class="stat-value">{{ $counts['completed'] }}</div>
+                            <div class="stat-label">Completed</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon rejected"><i class="fa-solid fa-circle-xmark"></i></div>
+                        <div>
+                            <div class="stat-value">{{ $counts['rejected'] }}</div>
+                            <div class="stat-label">Rejected</div>
+                        </div>
+                    </div>
+                </div>
 
-                        <button type="submit" class="btn-save">Save Changes</button>
-                    </form>
+                <div class="card-panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-wrench"></i> Maintenance Requests</h3>
+                        <div class="filter-tabs">
+                            <a href="{{ route('admin.maintenance.index') }}" class="filter-tab {{ empty($status) ? 'active' : '' }}">All</a>
+                            <a href="{{ route('admin.maintenance.index', ['status' => 'pending']) }}" class="filter-tab {{ $status === 'pending' ? 'active' : '' }}">Pending</a>
+                            <a href="{{ route('admin.maintenance.index', ['status' => 'in_progress']) }}" class="filter-tab {{ $status === 'in_progress' ? 'active' : '' }}">In Progress</a>
+                            <a href="{{ route('admin.maintenance.index', ['status' => 'completed']) }}" class="filter-tab {{ $status === 'completed' ? 'active' : '' }}">Completed</a>
+                            <a href="{{ route('admin.maintenance.index', ['status' => 'rejected']) }}" class="filter-tab {{ $status === 'rejected' ? 'active' : '' }}">Rejected</a>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Room</th>
+                                    <th>Issue</th>
+                                    <th>Submitted</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($requests as $request)
+                                    <tr>
+                                        <td>
+                                            <div class="row-cell">
+                                                <div class="row-avatar">{{ strtoupper(substr($request->user->name ?? '?', 0, 1)) }}</div>
+                                                <div>
+                                                    <div class="row-title">{{ $request->user->name ?? 'Unknown Student' }}</div>
+                                                    <div class="row-sub">{{ $request->user->email ?? '' }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ $request->room->room_number ?? 'N/A' }}</td>
+                                        <td>
+                                            <div class="row-title" style="font-size: 0.85rem;">
+                                                {{ $request->title ?? 'Maintenance Request' }}
+                                                @if ($request->priority)
+                                                    <span class="priority-pill {{ $request->priority }}">{{ $request->priority }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="issue-desc" title="{{ $request->description }}">{{ $request->description }}</div>
+                                        </td>
+                                        <td>{{ \Illuminate\Support\Carbon::parse($request->created_at)->format('M d, Y') }}</td>
+                                        <td>
+                                            <span class="status-pill {{ $request->status }}">
+                                                {{ str_replace('_', ' ', $request->status) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="icon-btn" title="Update" onclick="openModal('maintenanceModal{{ $request->id }}')">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
 
-                    <form action="{{ route('admin.maintenance.destroy', $maintenance) }}" method="POST"
-                          onsubmit="return confirm('Delete this maintenance request? This cannot be undone.');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn-delete">Delete Request</button>
-                    </form>
+                                    {{-- Update Maintenance Request Modal --}}
+                                    <div class="modal-overlay" id="maintenanceModal{{ $request->id }}">
+                                        <div class="modal-card">
+                                            <form action="{{ route('admin.maintenance.update', $request) }}" method="POST">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header">
+                                                    <h3><i class="fa-solid fa-wrench"></i> {{ $request->title ?? 'Maintenance Request' }}</h3>
+                                                    <button type="button" class="modal-close" onclick="closeModal('maintenanceModal{{ $request->id }}')">✕</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="req-description-view">
+                                                        <strong>{{ $request->user->name ?? 'Unknown Student' }}</strong> &middot; Room {{ $request->room->room_number ?? 'N/A' }}<br>
+                                                        {{ $request->description }}
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="form-label">Status</label>
+                                                        <select name="status" class="form-select">
+                                                            <option value="pending" {{ $request->status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                                            <option value="in_progress" {{ $request->status === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                                                            <option value="completed" {{ $request->status === 'completed' ? 'selected' : '' }}>Completed</option>
+                                                            <option value="rejected" {{ $request->status === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="form-label">Admin Notes</label>
+                                                        <textarea name="admin_notes" class="form-control" rows="3" placeholder="Add notes for the student...">{{ old('admin_notes', $request->admin_notes) }}</textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn-light" onclick="closeModal('maintenanceModal{{ $request->id }}')">Cancel</button>
+                                                    <button type="submit" class="btn-save">Save Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class="empty-state">No maintenance requests found. Requests appear here once students submit them.</div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="pagination-wrap">
+                        {{ $requests->links() }}
+                    </div>
                 </div>
             </div>
-        </div>
+        </main>
     </div>
 
     <script>
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('toggleBtn');
-        toggleBtn.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+        function openModal(id) {
+            document.getElementById(id).classList.add('open');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('open');
+        }
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) overlay.classList.remove('open');
+            });
+        });
     </script>
-
 </body>
 </html>

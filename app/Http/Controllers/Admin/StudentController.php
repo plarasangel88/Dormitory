@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class StudentController extends Controller
 {
@@ -39,8 +41,13 @@ class StudentController extends Controller
             'password'        => 'required|string|min:6',
         ]);
 
+        if (!empty($validated['room_id'])) {
+            $this->assertRoomHasSpace($validated['room_id']);
+        }
+
         $validated['password'] = Hash::make($validated['password']);
         $validated['role'] = 'student';
+        $validated['username'] = $this->generateUsername($validated['email']);
 
         User::create($validated);
 
@@ -59,6 +66,12 @@ class StudentController extends Controller
             'status'          => 'required|in:active,inactive',
         ]);
 
+        // Only enforce the capacity check if the student is being
+        // moved into a different room than the one they're already in.
+        if (!empty($validated['room_id']) && $validated['room_id'] != $student->room_id) {
+            $this->assertRoomHasSpace($validated['room_id']);
+        }
+
         $student->update($validated);
 
         return redirect()
@@ -73,5 +86,41 @@ class StudentController extends Controller
         return redirect()
             ->route('admin.students.index')
             ->with('success', 'Student deleted successfully.');
+    }
+
+    /**
+     * Generate a unique username from an email address,
+     * e.g. "angelplaras@gmail.com" -> "angelplaras", or
+     * "angelplaras1" if that username is already taken.
+     */
+    private function generateUsername(string $email): string
+    {
+        $base = Str::slug(explode('@', $email)[0], '');
+        $base = $base !== '' ? $base : 'user';
+
+        $username = $base;
+        $suffix = 1;
+
+        while (User::where('username', $username)->exists()) {
+            $username = $base . $suffix;
+            $suffix++;
+        }
+
+        return $username;
+    }
+
+    /**
+     * Throw a validation error (rendered wherever @error('room_id')
+     * is displayed) if the room is already at full capacity.
+     */
+    private function assertRoomHasSpace(int $roomId): void
+    {
+        $room = Room::withCount('students')->findOrFail($roomId);
+
+        if ($room->students_count >= $room->capacity) {
+            throw ValidationException::withMessages([
+                'room_id' => "Room {$room->room_number} is full ({$room->students_count}/{$room->capacity}). Please choose another room.",
+            ]);
+        }
     }
 }

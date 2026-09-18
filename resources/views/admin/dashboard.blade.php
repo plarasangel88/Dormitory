@@ -254,6 +254,23 @@
             box-shadow: 0 1px 2px rgba(22, 33, 62, 0.04);
         }
 
+        /* Clickable metric cards: same look, plus a hover/focus lift so
+           it's obvious these now link somewhere. */
+        a.metric-card {
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+        }
+
+        a.metric-card:hover,
+        a.metric-card:focus-visible {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px -10px rgba(22, 33, 62, 0.25);
+            border-color: var(--amber-soft);
+            outline: none;
+        }
+
         .metric-icon {
             width: 48px;
             height: 48px;
@@ -452,6 +469,15 @@
             text-transform: uppercase;
         }
 
+        .data-table tbody tr {
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: var(--paper);
+        }
+
         .status-pill {
             padding: 4px 10px;
             border-radius: 12px;
@@ -626,50 +652,50 @@
                     <p>Here's an overview of the dormitory system status today.</p>
                 </div>
 
-                <!-- 8.1 Key Metrics Overview -->
+                <!-- 8.1 Key Metrics Overview (each card now links to its related page) -->
                 <section class="metrics-grid">
-                    <div class="metric-card">
+                    <a href="{{ route('admin.students.index') }}" class="metric-card">
                         <div class="metric-icon blue"><i class="fa-solid fa-users"></i></div>
                         <div class="metric-info">
                             <span class="metric-title">TOTAL STUDENTS</span>
                             <div class="metric-value">{{ $totalStudents ?? 0 }}</div>
                         </div>
-                    </div>
-                    <div class="metric-card">
+                    </a>
+                    <a href="{{ route('admin.rooms.index') }}" class="metric-card">
                         <div class="metric-icon orange"><i class="fa-solid fa-bed"></i></div>
                         <div class="metric-info">
                             <span class="metric-title">TOTAL ROOMS</span>
                             <div class="metric-value">{{ $totalRooms ?? 0 }}</div>
                         </div>
-                    </div>
-                    <div class="metric-card">
+                    </a>
+                    <a href="{{ route('admin.rooms.index') }}" class="metric-card">
                         <div class="metric-icon green"><i class="fa-solid fa-chart-pie"></i></div>
                         <div class="metric-info">
                             <span class="metric-title">OCCUPANCY RATE</span>
                             <div class="metric-value">{{ $occupancyRate ?? 0 }}% <small>({{ $occupiedRooms ?? 0 }} Occupied)</small></div>
                         </div>
-                    </div>
-                    <div class="metric-card">
+                    </a>
+                    <a href="/admin/payments" class="metric-card">
                         <div class="metric-icon purple"><i class="fa-solid fa-calendar-check"></i></div>
                         <div class="metric-info">
                             <span class="metric-title">MONTHLY BOOKINGS</span>
                             <div class="metric-value">{{ $monthlyBookings ?? 0 }}</div>
                         </div>
-                    </div>
-                    <div class="metric-card">
+                    </a>
+                    <a href="/admin/payments?status=pending" class="metric-card">
                         <div class="metric-icon red"><i class="fa-solid fa-clock"></i></div>
                         <div class="metric-info">
                             <span class="metric-title">PENDING PAYMENTS</span>
                             <div class="metric-value">{{ $pendingPayments ?? 0 }}</div>
                         </div>
-                    </div>
-                    <div class="metric-card">
+                    </a>
+                    <a href="/admin/payments?status=paid" class="metric-card">
                         <div class="metric-icon teal"><i class="fa-solid fa-peso-sign"></i></div>
                         <div class="metric-info">
                             <span class="metric-title">TOTAL COLLECTED</span>
                             <div class="metric-value">₱{{ number_format($totalCollected ?? 0, 2) }}</div>
                         </div>
-                    </div>
+                    </a>
                 </section>
 
                 <!-- Core Grid -->
@@ -743,7 +769,7 @@
                                     </thead>
                                     <tbody>
                                         @forelse ($paymentMonitoring ?? [] as $payment)
-                                            <tr>
+                                            <tr onclick="window.location='/admin/payments/{{ $payment->id }}'">
                                                 <td><strong>{{ $payment->student_name }}</strong></td>
                                                 <td>{{ $payment->room_number ?? 'Unassigned' }}</td>
                                                 <td>₱{{ number_format($payment->amount_due, 2) }}</td>
@@ -752,7 +778,7 @@
                                                         {{ ucfirst($payment->status) }}
                                                     </span>
                                                 </td>
-                                                <td>
+                                                <td onclick="event.stopPropagation()">
                                                     @if (strtolower($payment->status) === 'pending')
                                                         <button class="table-btn" onclick="openScanner()" type="button">
                                                             <i class="fa-solid fa-qrcode"></i> Scan

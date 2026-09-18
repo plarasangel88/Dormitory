@@ -26,7 +26,7 @@ class MaintenanceController extends Controller
             'rejected'    => MaintenanceRequest::where('status', 'rejected')->count(),
         ];
 
-        return view('admin.maintenance.index', compact('requests', 'counts', 'status'));
+      return view('admin.maintenance', compact('requests', 'counts', 'status'));
     }
 
     public function show(MaintenanceRequest $maintenance)
