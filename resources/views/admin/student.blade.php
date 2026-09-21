@@ -393,6 +393,26 @@
             margin-top: 1px;
         }
 
+        /* Clickable student box (avatar + name + email) */
+        .student-cell.clickable {
+            cursor: pointer;
+            padding: 8px 12px;
+            margin: -8px -12px;
+            border-radius: 10px;
+            transition: background-color 0.15s ease;
+        }
+
+        .student-cell.clickable:hover,
+        .student-cell.clickable:focus-visible {
+            background-color: var(--amber-tint);
+            outline: none;
+        }
+
+        .student-cell.clickable:hover .student-name,
+        .student-cell.clickable:focus-visible .student-name {
+            color: #B4741F;
+        }
+
         .contact-cell {
             display: flex;
             align-items: center;
@@ -625,6 +645,70 @@
 
         .btn-save:hover { background-color: var(--navy-mid); }
 
+        /* View-student modal */
+        .detail-hero {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-hero .avatar {
+            width: 52px;
+            height: 52px;
+            font-size: 1.3rem;
+        }
+
+        .detail-hero .detail-name {
+            font-family: 'Fraunces', serif;
+            font-size: 1.15rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .detail-hero .detail-email {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 11px 0;
+            border-bottom: 1px dashed var(--border-color);
+            font-size: 0.85rem;
+        }
+
+        .detail-row:last-child { border-bottom: none; }
+
+        .detail-row .detail-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .detail-row .detail-label i {
+            color: var(--amber);
+            width: 14px;
+            text-align: center;
+        }
+
+        .detail-row .detail-value {
+            color: var(--text-primary);
+            font-weight: 500;
+            text-align: right;
+        }
+
         @media (max-width: 1024px) {
             .toolbar { flex-direction: column; align-items: stretch; }
             .toolbar .search-bar { width: 100%; }
@@ -654,9 +738,6 @@
                 </a>
                 <a href="/admin/maintenance" class="menu-item {{ request()->is('admin/maintenance*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wrench"></i> Maintenance
-                </a>
-                <a href="/admin/profile" class="menu-item {{ request()->is('admin/profile*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-circle-user"></i> Profile
                 </a>
             </nav>
             <div class="sidebar-footer">
@@ -731,7 +812,10 @@
                                 @forelse ($students as $student)
                                     <tr>
                                         <td>
-                                            <div class="student-cell">
+                                            <div class="student-cell clickable" role="button" tabindex="0"
+                                                 title="View student information"
+                                                 onclick="openModal('viewStudentModal{{ $student->id }}')"
+                                                 onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openModal('viewStudentModal{{ $student->id }}'); }">
                                                 <div class="avatar">{{ strtoupper(substr($student->name, 0, 1)) }}</div>
                                                 <div>
                                                     <div class="student-name">{{ $student->name }}</div>
@@ -776,6 +860,61 @@
                                             </div>
                                         </td>
                                     </tr>
+
+                                    <!-- View Modal -->
+                                    <div class="modal-overlay" id="viewStudentModal{{ $student->id }}">
+                                        <div class="modal-card">
+                                            <div class="modal-header">
+                                                <h3><i class="fa-solid fa-id-card"></i> Student Information</h3>
+                                                <button type="button" class="modal-close" onclick="closeModal('viewStudentModal{{ $student->id }}')">✕</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="detail-hero">
+                                                    <div class="avatar">{{ strtoupper(substr($student->name, 0, 1)) }}</div>
+                                                    <div>
+                                                        <div class="detail-name">{{ $student->name }}</div>
+                                                        <div class="detail-email">{{ $student->email }}</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="detail-row">
+                                                    <span class="detail-label"><i class="fa-solid fa-phone"></i> Contact</span>
+                                                    <span class="detail-value">{{ $student->contact_number ?? '—' }}</span>
+                                                </div>
+                                                <div class="detail-row">
+                                                    <span class="detail-label"><i class="fa-solid fa-door-closed"></i> Room</span>
+                                                    <span class="detail-value">
+                                                        @if ($student->room)
+                                                            <a href="{{ route('admin.rooms.show', $student->room) }}" class="room-link">
+                                                                {{ $student->room->room_number }}
+                                                            </a>
+                                                        @else
+                                                            <span class="text-unassigned">Unassigned</span>
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                                <div class="detail-row">
+                                                    <span class="detail-label"><i class="fa-solid fa-circle-half-stroke"></i> Status</span>
+                                                    <span class="detail-value">
+                                                        <span class="status-pill {{ $student->status === 'active' ? 'active' : 'inactive' }}">
+                                                            <i class="fa-solid fa-circle"></i> {{ ucfirst($student->status) }}
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                                <div class="detail-row">
+                                                    <span class="detail-label"><i class="fa-solid fa-calendar-plus"></i> Registered</span>
+                                                    <span class="detail-value">{{ $student->created_at?->format('M d, Y') ?? '—' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn-light" onclick="closeModal('viewStudentModal{{ $student->id }}')">Close</button>
+                                                <button type="button" class="btn-save"
+                                                        onclick="closeModal('viewStudentModal{{ $student->id }}'); openModal('editStudentModal{{ $student->id }}')">
+                                                    <i class="fa-solid fa-pen"></i> Edit
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <!-- Edit Modal -->
                                     <div class="modal-overlay" id="editStudentModal{{ $student->id }}">

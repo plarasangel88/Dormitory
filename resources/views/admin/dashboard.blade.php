@@ -616,9 +616,6 @@
                 <a href="/admin/maintenance" class="menu-item {{ request()->is('admin/maintenance*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wrench"></i> Maintenance
                 </a>
-                <a href="/admin/profile" class="menu-item {{ request()->is('admin/profile*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-circle-user"></i> Profile
-                </a>
             </nav>
             <div class="sidebar-footer">
                 <form method="POST" action="{{ route('logout') }}">

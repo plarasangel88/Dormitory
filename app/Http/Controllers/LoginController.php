@@ -15,36 +15,36 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         // Validate input
-        $request->validate([
+        $credentials = $request->validate([
             'username' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
-        // Attempt authentication
-        $credentials = [
-            'username' => $request->username,
-            'password' => $request->password,
-        ];
+        // Try to log in
+        if (!Auth::attempt([
+            'username' => $credentials['username'],
+            'password' => $credentials['password'],
+        ], $request->boolean('remember'))) {
 
-        if (!Auth::attempt($credentials)) {
+            // Username or password is incorrect
             return back()
                 ->withErrors([
-                    'username' => 'Invalid username or password.',
+                    'login' => 'Incorrect username or password.',
                 ])
                 ->withInput($request->only('username'));
         }
 
-        // Authentication successful
+        // Regenerate session after successful login
         $request->session()->regenerate();
 
         $user = Auth::user();
 
         // ADMIN
         if ($user->role === 'admin') {
-            return redirect('/admin/dashboard');
+            return redirect()->intended('/admin/dashboard');
         }
 
         // STUDENT
-        return redirect('/dashboard');
+        return redirect()->intended('/dashboard');
     }
 }
