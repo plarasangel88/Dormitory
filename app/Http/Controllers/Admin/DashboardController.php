@@ -13,7 +13,13 @@ class DashboardController extends Controller
     {
         $totalStudents = User::where('role', 'student')->count();
         $totalRooms = Room::count();
-        $occupiedRooms = Room::where('status', 'occupied')->count();
+
+        // A room counts as occupied if it has at least one student
+        // assigned to it (via users.room_id), regardless of the
+        // room's `status` column, since that column isn't kept in
+        // sync with assignments anywhere else in the app yet.
+        $occupiedRooms = Room::has('students')->count();
+
         $pendingPayments = Payment::where('status', 'pending')->count();
         $totalCollected = Payment::where('status', 'verified')->sum('amount');
 
