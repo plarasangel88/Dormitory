@@ -643,7 +643,7 @@
                 <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->is('admin/payments*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wallet"></i> Payments
                 </a>
-                <a href="/admin/maintenance" class="menu-item {{ request()->is('admin/maintenance*') ? 'active' : '' }}">
+                <a href="{{ route('admin.maintenance.index') }}" class="menu-item {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wrench"></i> Maintenance
                 </a>
             </nav>
@@ -843,6 +843,8 @@
                 if (e.target === overlay) overlay.classList.remove('open');
             });
         });
+        const requestToOpen = new URLSearchParams(window.location.search).get('open');
+        if (requestToOpen) openModal('maintenanceModal' + requestToOpen);
     </script>
 </body>
 </html>

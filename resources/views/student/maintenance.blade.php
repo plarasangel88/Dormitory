@@ -288,7 +288,7 @@
         .badge { display: inline-block; padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: capitalize; white-space: nowrap; }
         .badge-pending      { background-color: #FBEBD4; color: #8A5A17; }
         .badge-in_progress  { background-color: #EAEEF7; color: #34497D; }
-        .badge-resolved     { background-color: #E1EFE6; color: #2F6A45; }
+        .badge-resolved, .badge-completed { background-color: #E1EFE6; color: #2F6A45; }
 
         .badge-priority-low    { background-color: #F1F4F0; color: #55725D; }
         .badge-priority-medium { background-color: #FBEBD4; color: #8A5A17; }
@@ -310,48 +310,23 @@
             .history-card { overflow-x: auto; }
         }
     </style>
+    @include('student.partials.theme')
 </head>
 <body>
     <div class="app-container">
         <!-- Sidebar Navigation (same skin as Student Dashboard; links unchanged) -->
-        <aside class="sidebar">
-            <div class="sidebar-brand">
-                <i class="fa-solid fa-building-user"></i>
-                <span>Dorm Portal</span>
-            </div>
-            <nav class="sidebar-menu">
-                <a href="/dashboard" class="menu-item {{ request()->is('dashboard') ? 'active' : '' }}">
-                    <i class="fa-solid fa-house"></i> Dashboard
-                </a>
-                <a href="/room" class="menu-item {{ request()->is('room*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-door-closed"></i> My Room
-                </a>
-                <a href="/payments" class="menu-item {{ request()->is('payments*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-wallet"></i> Payments
-                </a>
-                <a href="/maintenance" class="menu-item {{ request()->is('maintenance*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-wrench"></i> Maintenance
-                </a>
-                <a href="/profile" class="menu-item {{ request()->is('profile*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-circle-user"></i> Profile
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <form method="POST" action="/logout">
-                    @csrf
-                    <button type="submit" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
-                </form>
-            </div>
-        </aside>
+        @include('student.partials.sidebar')
 
         <!-- Main Workspace -->
         <main class="main-content">
             <!-- Header Bar (same skin as Student Dashboard) -->
             <header class="top-header">
+                <button class="student-menu-toggle" type="button" data-student-sidebar-toggle aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
                 <div class="search-bar">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" placeholder="Search...">
                 </div>
+                @include('student.partials.announcement-bell')
                 <div class="admin-profile-badge">
                     <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                     <div class="user-info">
@@ -379,6 +354,15 @@
                                 <li>{{ $error }}</li>
                             @endforeach
                         </ul>
+                    </div>
+                @endif
+
+                @if($selectedRequest)
+                    <div class="card-panel" style="margin-bottom: 22px;">
+                        <h3><i class="fa-solid fa-clipboard-list"></i> Request Details</h3>
+                        <p><strong>{{ \Illuminate\Support\Str::after($selectedRequest->title, '] ') }}</strong> · {{ ucfirst($selectedRequest->priority) }} priority</p>
+                        <p style="margin-top: 8px;">{{ $selectedRequest->description }}</p>
+                        <p style="margin-top: 8px;">Status: {{ str_replace('_', ' ', ucfirst($selectedRequest->status)) }} · Submitted {{ $selectedRequest->created_at->format('M d, Y') }}</p>
                     </div>
                 @endif
 
@@ -467,23 +451,25 @@
                                     <th>Title / Description</th>
                                     <th>Priority</th>
                                     <th>Status</th>
+                                    <th>Details</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($requests as $req)
                                     <tr>
                                         <td>{{ $req->created_at->format('M d, Y') }}</td>
-                                        <td>{{ $req->category }}</td>
+                                        <td>{{ \Illuminate\Support\Str::startsWith($req->title, '[') ? \Illuminate\Support\Str::before(\Illuminate\Support\Str::after($req->title, '['), ']') : 'Other' }}</td>
                                         <td>
-                                            <div class="title-cell">{{ $req->title }}</div>
+                                            <div class="title-cell">{{ \Illuminate\Support\Str::after($req->title, '] ') }}</div>
                                             <div class="desc-cell">{{ \Illuminate\Support\Str::limit($req->description, 90) }}</div>
                                         </td>
                                         <td><span class="badge badge-priority-{{ $req->priority }}">{{ $req->priority }}</span></td>
                                         <td><span class="badge badge-{{ $req->status }}">{{ str_replace('_', ' ', $req->status) }}</span></td>
+                                        <td><a href="{{ route('maintenance.show', $req) }}">View</a></td>
                                     </tr>
                                 @empty
                                     <tr class="empty-row">
-                                        <td colspan="5">No maintenance requests yet. Use the form to report an issue.</td>
+                                        <td colspan="6">No maintenance requests yet. Use the form to report an issue.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -493,5 +479,6 @@
             </div>
         </main>
     </div>
+    @include('student.partials.announcement-bell-script')
 </body>
 </html>

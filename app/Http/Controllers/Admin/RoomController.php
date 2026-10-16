@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 
 class RoomController extends Controller
 {
+    public function show(Room $room)
+    {
+        return redirect()->route('admin.rooms.index', ['search' => $room->room_number]);
+    }
+
     public function index(Request $request)
     {
         $query = Room::query()->withCount('students');

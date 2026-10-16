@@ -195,7 +195,7 @@
         .action-btn:hover { background-color: var(--navy-deep); color: #FFF; border-color: var(--navy-deep); }
         .action-btn:hover i { color: var(--amber); }
 
-        /* Activity feed */
+        /* Live badge */
         .live-badge {
             background-color: #E1EFE6; color: var(--success-green);
             padding: 4px 10px; border-radius: 12px; font-size: 0.68rem; font-weight: 700;
@@ -211,11 +211,10 @@
         .spin { animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* Announcements / feed list */
         .activity-feed { list-style: none; display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 
         .feed-item { display: flex; gap: 12px; align-items: flex-start; padding: 8px; border-radius: 8px; }
-        a.feed-item { text-decoration: none; color: inherit; transition: background-color 0.15s ease; }
-        a.feed-item:hover { background-color: var(--paper); }
 
         .feed-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
         .feed-icon.green { background-color: #E1EFE6; color: var(--success-green); }
@@ -224,6 +223,38 @@
 
         .feed-content p { font-size: 0.85rem; color: var(--text-primary); line-height: 1.3; }
         .feed-content small { font-size: 0.75rem; color: var(--text-secondary); }
+
+        .announce-form {
+            display: flex; flex-direction: column; gap: 8px;
+            margin-bottom: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--border-color);
+        }
+
+        .announce-form input[type="text"], .announce-form textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px;
+            font-size: 0.85rem; background: var(--paper); outline: none; resize: vertical; color: var(--text-primary);
+        }
+
+        .announce-form input[type="text"]:focus, .announce-form textarea:focus { border-color: var(--amber); background: #FFF; }
+        .announce-form textarea { min-height: 80px; }
+
+        .announce-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .pin-check { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-secondary); cursor: pointer; }
+
+        .post-btn {
+            padding: 8px 16px; background: var(--amber); color: var(--navy-deep); border: none;
+            border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .post-btn:hover { background: var(--amber-soft); }
+        .post-btn:disabled { opacity: 0.6; cursor: wait; }
+
+        .announce-item { border-bottom: 1px solid var(--border-color); padding: 12px 8px; }
+        .announce-item:last-child { border-bottom: none; }
+        .announce-item .feed-content { flex: 1; min-width: 0; }
+        .announce-item .feed-content p { word-break: break-word; }
+        .announce-item .feed-content p + p { margin-top: 4px; color: #4A4439; line-height: 1.5; }
+        .announce-item small { display: block; margin-top: 6px; }
+        .announce-item .table-btn { margin-left: auto; flex-shrink: 0; }
 
         /* Payment table */
         .view-all-link { font-size: 0.8rem; color: var(--navy-deep); text-decoration: none; font-weight: 600; border-bottom: 1.5px solid var(--amber); padding-bottom: 1px; }
@@ -350,10 +381,13 @@
                 <a href="{{ route('admin.rooms.index') }}" class="menu-item {{ request()->routeIs('admin.rooms.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-door-closed"></i> Rooms
                 </a>
-                <a href="/admin/payments" class="menu-item {{ request()->is('admin/payments*') ? 'active' : '' }}">
+                <a href="{{ route('admin.payments.index', ['section' => 'billing']) }}" class="menu-item {{ request()->routeIs('admin.payments.*', 'admin.bills.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> Payments & Billing
+                </a>
+                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wallet"></i> Payments
                 </a>
-                <a href="/admin/maintenance" class="menu-item {{ request()->is('admin/maintenance*') ? 'active' : '' }}">
+                <a href="{{ route('admin.maintenance.index') }}" class="menu-item {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wrench"></i> Maintenance
                 </a>
             </nav>
@@ -425,21 +459,21 @@
                             <div class="metric-value">{{ $occupancyRate ?? 0 }}% <small>({{ $occupiedRooms ?? 0 }} Occupied)</small></div>
                         </div>
                     </a>
-                    <a href="/admin/payments" class="metric-card">
+                    <a href="{{ route('admin.payments.index') }}" class="metric-card">
                         <div class="metric-icon purple"><i class="fa-solid fa-calendar-check"></i></div>
                         <div class="metric-info">
                             <span class="metric-title">MONTHLY BOOKINGS</span>
                             <div class="metric-value">{{ $monthlyBookings ?? 0 }}</div>
                         </div>
                     </a>
-                    <a href="/admin/payments?status=pending" class="metric-card">
+                    <a href="{{ route('admin.payments.index', ['status' => 'pending']) }}" class="metric-card">
                         <div class="metric-icon red"><i class="fa-solid fa-clock"></i></div>
                         <div class="metric-info">
                             <span class="metric-title">PENDING PAYMENTS</span>
                             <div class="metric-value">{{ $pendingPayments ?? 0 }}</div>
                         </div>
                     </a>
-                    <a href="/admin/payments?status=paid" class="metric-card">
+                    <a href="{{ route('admin.payments.index', ['status' => 'paid']) }}" class="metric-card">
                         <div class="metric-icon teal"><i class="fa-solid fa-peso-sign"></i></div>
                         <div class="metric-info">
                             <span class="metric-title">TOTAL COLLECTED</span>
@@ -460,45 +494,55 @@
                                 <a href="{{ $roomAssign }}" class="action-btn">
                                     <i class="fa-solid fa-door-open"></i> Assign Room
                                 </a>
-                                <button class="action-btn" data-action="scan" type="button">
-                                    <i class="fa-solid fa-qrcode"></i> Scan Payment Code
-                                </button>
-                                <a href="/admin/payments?status=paid" class="action-btn">
-                                    <i class="fa-solid fa-file-invoice"></i> Print Receipt
+                                <a href="{{ route('admin.payments.index') }}" class="action-btn">
+                                    <i class="fa-solid fa-wallet"></i> Manage Payments
+                                </a>
+                                <a href="{{ route('admin.payments.index', ['section' => 'billing']) }}" class="action-btn">
+                                    <i class="fa-solid fa-file-invoice"></i> Manage Billing
                                 </a>
                             </div>
                         </div>
 
+                        <!-- Announcements (admin posts, students see on their dashboard) -->
                         <div class="card-panel margin-top">
                             <div class="panel-header">
-                                <h3><i class="fa-solid fa-stream"></i> Dormitory Activity Feed</h3>
+                                <h3><i class="fa-solid fa-bullhorn"></i> Announcements</h3>
                                 <button type="button" class="live-badge" id="liveBadge" data-action="toggle-live" title="Click to pause / resume auto-refresh">
                                     <span class="dot"></span> <span id="liveLabel">Live Updates</span>
                                 </button>
                             </div>
+
+                            <form class="announce-form" id="announceForm">
+                                <input type="text" name="title" placeholder="Announcement title" maxlength="150" required>
+                                <textarea name="body" placeholder="Write your message to the students..." maxlength="2000" required></textarea>
+                                <div class="announce-row">
+                                    <label class="pin-check">
+                                        <input type="checkbox" name="is_pinned" value="1"> Pin to top
+                                    </label>
+                                    <button type="submit" class="post-btn">
+                                        <i class="fa-solid fa-paper-plane"></i> Post
+                                    </button>
+                                </div>
+                            </form>
+
                             <ul class="activity-feed" id="activityFeed">
-                                @forelse ($activityFeed ?? [] as $activity)
-                                    @php $tag = !empty($activity['url']) ? 'a' : 'li'; @endphp
-                                    @if ($tag === 'a')
-                                        <li><a href="{{ $activity['url'] }}" class="feed-item">
-                                    @else
-                                        <li class="feed-item">
-                                    @endif
-                                        <span class="feed-icon {{ $activity['color'] ?? 'blue' }}">
-                                            <i class="fa-solid {{ $activity['icon'] ?? 'fa-circle-info' }}"></i>
+                                @forelse ($announcements ?? [] as $a)
+                                    <li class="feed-item announce-item">
+                                        <span class="feed-icon {{ $a->is_pinned ? 'orange' : 'blue' }}">
+                                            <i class="fa-solid {{ $a->is_pinned ? 'fa-thumbtack' : 'fa-bullhorn' }}"></i>
                                         </span>
                                         <div class="feed-content">
-                                            <p>{!! $activity['message'] !!}</p>
-                                            <small>{{ $activity['time'] }}</small>
+                                            <p><strong>{{ $a->title }}</strong></p>
+                                            <p>{!! nl2br(e($a->body)) !!}</p>
+                                            <small>{{ $a->author->name ?? 'Admin' }} · {{ $a->created_at->diffForHumans() }}</small>
                                         </div>
-                                    @if ($tag === 'a')
-                                        </a></li>
-                                    @else
-                                        </li>
-                                    @endif
+                                        <button type="button" class="table-btn secondary" data-action="delete-announcement" data-id="{{ $a->id }}" title="Delete announcement">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </li>
                                 @empty
                                     <li class="feed-item">
-                                        <div class="feed-content"><p>No recent activity.</p></div>
+                                        <div class="feed-content"><p>No announcements yet.</p></div>
                                     </li>
                                 @endforelse
                             </ul>
@@ -510,7 +554,7 @@
                         <div class="card-panel">
                             <div class="panel-header">
                                 <h3><i class="fa-solid fa-file-invoice-dollar"></i> Student Payment Monitoring</h3>
-                                <a href="/admin/payments" class="view-all-link">View All Records</a>
+                                <a href="{{ route('admin.payments.index') }}" class="view-all-link">View All Records</a>
                             </div>
 
                             <div class="filter-tabs" id="statusFilters">
@@ -526,7 +570,7 @@
                                         <tr>
                                             <th>Student</th>
                                             <th>Room</th>
-                                            <th>Amount Due</th>
+                                            <th>Payment Amount</th>
                                             <th>Status</th>
                                             <th>Action</th>
                                         </tr>
@@ -534,25 +578,15 @@
                                     <tbody id="paymentBody">
                                         @forelse ($paymentMonitoring ?? [] as $payment)
                                             @php $status = strtolower($payment->status); @endphp
-                                            <tr data-href="/admin/payments/{{ $payment->id }}" data-status="{{ $status }}" tabindex="0">
+                                            <tr data-status="{{ $status }}">
                                                 <td><strong>{{ $payment->student_name }}</strong></td>
                                                 <td>{{ $payment->room_number ?? 'Unassigned' }}</td>
                                                 <td>₱{{ number_format($payment->amount_due, 2) }}</td>
                                                 <td><span class="status-pill {{ $status }}">{{ ucfirst($payment->status) }}</span></td>
                                                 <td>
-                                                    @if ($status === 'pending')
-                                                        <button class="table-btn" type="button" data-action="scan" data-id="{{ $payment->id }}">
-                                                            <i class="fa-solid fa-qrcode"></i> Scan
-                                                        </button>
-                                                    @elseif ($status === 'paid')
-                                                        <a class="table-btn secondary" href="/admin/payments/{{ $payment->id }}/receipt" target="_blank" rel="noopener">
-                                                            <i class="fa-solid fa-receipt"></i> Print
-                                                        </a>
-                                                    @else
-                                                        <button class="table-btn secondary" type="button" data-action="remind" data-id="{{ $payment->id }}">
-                                                            <i class="fa-solid fa-bell"></i> Remind
-                                                        </button>
-                                                    @endif
+                                                    <a class="table-btn" href="{{ route('admin.payments.index') }}">
+                                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Open
+                                                    </a>
                                                 </td>
                                             </tr>
                                         @empty
@@ -617,7 +651,11 @@
             });
             let data = {};
             try { data = await res.json(); } catch (e) {}
-            if (!res.ok) throw new Error(data.message || 'Request failed (' + res.status + ')');
+            if (!res.ok) {
+                // Show the first validation error if there is one
+                const firstError = data.errors ? Object.values(data.errors)[0][0] : null;
+                throw new Error(firstError || data.message || 'Request failed (' + res.status + ')');
+            }
             return data;
         }
 
@@ -701,6 +739,42 @@
             }
         }
 
+        /* ---------- Announcements ---------- */
+        $('#announceForm').addEventListener('submit', async e => {
+            e.preventDefault();
+            const form = e.target;
+            const btn = $('.post-btn', form);
+            btn.disabled = true;
+            try {
+                const data = await post('{{ route('admin.announcements.store') }}', {
+                    title: form.title.value.trim(),
+                    body: form.body.value.trim(),
+                    is_pinned: form.is_pinned.checked ? 1 : 0
+                });
+                toast(data.message || 'Announcement posted.', 'success');
+                form.reset();
+                refreshDashboard();
+            } catch (err) {
+                toast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        async function deleteAnnouncement(btn) {
+            if (!confirm('Delete this announcement? Students will no longer see it.')) return;
+            btn.disabled = true;
+            try {
+                const deleteUrl = @json(route('admin.announcements.destroy', ['announcement' => '__ANNOUNCEMENT_ID__']));
+                const data = await post(deleteUrl.replace('__ANNOUNCEMENT_ID__', encodeURIComponent(btn.dataset.id)));
+                toast(data.message || 'Announcement deleted.', 'success');
+                refreshDashboard();
+            } catch (err) {
+                toast(err.message, 'error');
+                btn.disabled = false;
+            }
+        }
+
         /* ---------- Filters + live search for payment table ---------- */
         let statusFilter = 'all';
 
@@ -768,6 +842,7 @@
                     case 'remind': sendReminder(actionEl); break;
                     case 'toggle-live': toggleLive(); break;
                     case 'toggle-sidebar': document.body.classList.toggle('sidebar-open'); break;
+                    case 'delete-announcement': deleteAnnouncement(actionEl); break;
                 }
                 return;
             }

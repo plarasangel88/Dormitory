@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Room;
 use App\Models\Payment;
+use App\Models\Announcement;
 
 class DashboardController extends Controller
 {
@@ -27,13 +28,33 @@ class DashboardController extends Controller
             ? round(($occupiedRooms / $totalRooms) * 100, 1)
             : 0;
 
+        $announcements = Announcement::with('author')->feed()->take(10)->get();
+        $paymentMonitoring = Payment::with(['user.room'])
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function (Payment $payment) {
+                $payment->student_name = $payment->user?->name ?? 'Unknown student';
+                $payment->room_number = $payment->user?->room?->room_number;
+                $payment->amount_due = $payment->amount;
+                $payment->status = match ($payment->status) {
+                    'verified' => 'paid',
+                    'rejected' => 'unpaid',
+                    default => $payment->status,
+                };
+
+                return $payment;
+            });
+
         return view('admin.dashboard', compact(
             'totalStudents',
             'totalRooms',
             'occupiedRooms',
             'pendingPayments',
             'totalCollected',
-            'occupancyRate'
+            'occupancyRate',
+            'announcements',
+            'paymentMonitoring'
         ));
     }
 }

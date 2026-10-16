@@ -3,43 +3,59 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bill;
 use App\Models\Payment;
-use App\Models\Student;
+use App\Models\Room;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 
 class PaymentController extends Controller
 {
     public function index(Request $request)
     {
+        $filters = $request->validate([
+            'section' => ['nullable', 'in:payments,billing'],
+            'month' => ['nullable', 'date_format:Y-m'],
+        ]);
+        $section = $filters['section'] ?? 'payments';
+        $month = Carbon::createFromFormat('Y-m', $filters['month'] ?? now()->format('Y-m'))->startOfMonth();
+
         $search = $request->input('search');
 
-        $payments = Payment::with('student')
+        $payments = Payment::with(['user', 'bill'])
             ->when($search, function ($query, $search) {
-                $query->where('reference_number', 'like', "%{$search}%")
-                      ->orWhereHas('student', function ($q) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('reference_number', 'like', "%{$search}%")
+                      ->orWhereHas('user', function ($q) use ($search) {
                           $q->where('name', 'like', "%{$search}%");
                       });
+                });
             })
-            ->latest('payment_date')
+            ->latest()
             ->paginate(10)
             ->withQueryString();
 
-        $students = Student::orderBy('name')->get();
+        $students = User::where('role', 'student')->orderBy('name')->get();
+        $bills = collect();
+        $rooms = collect();
 
-        return view('admin.payment', compact('payments', 'students'));
+        if ($section === 'billing') {
+            $bills = Bill::with(['student', 'room', 'payments'])
+                ->whereDate('billing_month', $month)
+                ->orderBy('room_id')
+                ->get();
+
+            $rooms = Room::withCount('students')->orderBy('room_number')->get();
+        }
+
+        return view('admin.payment', compact('payments', 'students', 'section', 'month', 'bills', 'rooms'));
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'student_id'        => ['required', 'exists:students,id'],
-            'amount'            => ['required', 'numeric', 'min:0'],
-            'payment_method'    => ['required', 'in:cash,gcash,bank_transfer,other'],
-            'status'            => ['required', 'in:paid,pending,overdue'],
-            'reference_number'  => ['nullable', 'string', 'max:50'],
-            'payment_date'      => ['required', 'date'],
-            'remarks'           => ['nullable', 'string'],
-        ]);
+        $validated = $request->validate($this->rules($request));
 
         Payment::create($validated);
 
@@ -50,15 +66,13 @@ class PaymentController extends Controller
 
     public function update(Request $request, Payment $payment)
     {
-        $validated = $request->validate([
-            'student_id'        => ['required', 'exists:students,id'],
-            'amount'            => ['required', 'numeric', 'min:0'],
-            'payment_method'    => ['required', 'in:cash,gcash,bank_transfer,other'],
-            'status'            => ['required', 'in:paid,pending,overdue'],
-            'reference_number'  => ['nullable', 'string', 'max:50'],
-            'payment_date'      => ['required', 'date'],
-            'remarks'           => ['nullable', 'string'],
-        ]);
+        $validated = $request->validate($this->rules($request));
+
+        if ($payment->bill_id && (int) $payment->bill->student_id !== (int) $validated['user_id']) {
+            return back()->withErrors([
+                'user_id' => 'This payment is linked to a bill for a different student.',
+            ])->withInput();
+        }
 
         $payment->update($validated);
 
@@ -75,4 +89,18 @@ class PaymentController extends Controller
             ->route('admin.payments.index')
             ->with('success', 'Payment deleted successfully.');
     }
-}
+
+    private function rules(Request $request): array
+    {
+        return [
+            'user_id'          => ['required', 'exists:users,id'],
+            'bill_id'          => ['sometimes', 'nullable', Rule::exists('bills', 'id')->where(fn ($query) => $query->where('student_id', $request->input('user_id')))],
+            'applies_to'       => ['sometimes', 'nullable', 'required_with:bill_id', 'in:rent,electricity,water'],
+            'amount'           => ['required', 'numeric', 'min:0'],
+            'method'           => ['required', 'in:GCash,Bank Transfer,Cash'],
+            'status'           => ['required', 'in:pending,verified,rejected'],
+            'reference_number' => ['nullable', 'string', 'max:255'],
+            'notes'            => ['nullable', 'string', 'max:500'],
+        ];
+    }
+};

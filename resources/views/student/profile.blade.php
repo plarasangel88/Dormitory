@@ -393,80 +393,23 @@
             .profile-card { padding: 24px; }
         }
     </style>
+    @include('student.partials.theme')
 </head>
 <body>
 
-    <!-- Sidebar -->
-    <div class="sidebar-wrapper">
-        <div class="sidebar" id="sidebar">
-            <button class="toggle-btn" id="toggleBtn" title="Toggle sidebar">◀</button>
-            <div class="logo">
-                <div class="key-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="8" cy="15" r="4"></circle>
-                        <path d="M10.5 12.5L19 4M19 4h-4M19 4v4"></path>
-                    </svg>
-                </div>
-                <span class="logo-text">Dorm Portal</span>
-            </div>
-            <nav>
-                <a href="/dashboard">
-                    <span class="link-icon">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M3 10.5 12 3l9 7.5"></path>
-                            <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"></path>
-                        </svg>
-                    </span>
-                    <span class="link-text">Dashboard</span>
-                </a>
-                <a href="/room">
-                    <span class="link-icon">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M2 18v-6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v6"></path>
-                            <path d="M2 18h20"></path>
-                            <path d="M6 10V6.5A1.5 1.5 0 0 1 7.5 5h4A1.5 1.5 0 0 1 13 6.5V10"></path>
-                        </svg>
-                    </span>
-                    <span class="link-text">My Room</span>
-                </a>
-                <a href="/payments">
-                    <span class="link-icon">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                            <path d="M2 10h20"></path>
-                        </svg>
-                    </span>
-                    <span class="link-text">Payments</span>
-                </a>
-                <a href="/maintenance">
-                    <span class="link-icon">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.4-3.4a5 5 0 0 1-6.7 6.7l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a5 5 0 0 1 6.7-6.7z"></path>
-                        </svg>
-                    </span>
-                    <span class="link-text">Maintenance</span>
-                </a>
-                <a href="/profile" class="active">
-                    <span class="link-icon">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-1.5a5 5 0 0 0-5-5H9a5 5 0 0 0-5 5V21"></path>
-                            <circle cx="12" cy="7.5" r="4"></circle>
-                        </svg>
-                    </span>
-                    <span class="link-text">Profile</span>
-                </a>
-            </nav>
-            <div class="logout-form">
-                <form action="/logout" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-logout">Logout</button>
-                </form>
-            </div>
-        </div>
-    </div>
+    @include('student.partials.sidebar')
 
     <!-- Main content -->
     <div class="main">
+        <header class="student-shared-header">
+            <button class="student-menu-toggle" type="button" data-student-sidebar-toggle aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
+            <div class="page-heading"><strong>My Profile</strong><small>Manage your account information</small></div>
+            @include('student.partials.announcement-bell')
+            <div class="user-profile">
+                <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+                <div class="user-info"><span class="user-name">{{ auth()->user()->name }}</span><span class="user-role">{{ strtoupper(auth()->user()->role) }}</span></div>
+            </div>
+        </header>
         <div class="page-head">
             <div class="eyebrow-mark"></div>
             <h1>My Profile</h1>
@@ -551,11 +494,7 @@
         </div>
     </div>
 
-    <script>
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('toggleBtn');
-        toggleBtn.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
-    </script>
+    @include('student.partials.announcement-bell-script')
 
 </body>
 </html>

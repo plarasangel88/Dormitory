@@ -20,7 +20,8 @@ class ProfileController extends Controller
 
         $fields = $request->validate([
             'name'   => 'required|string|max:255',
-            'email'  => ['required', 'email', Rule::unique('registers', 'email')->ignore($user->id)],
+            'email'  => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'contact_number' => ['nullable', 'string', 'max:30'],
             'course' => [
                 'required',
                 Rule::in([

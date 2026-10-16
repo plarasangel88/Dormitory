@@ -75,4 +75,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Payment::class)->latest();
     }
+
+    public function bills()
+    {
+        return $this->hasMany(Bill::class, 'student_id');
+    }
 }

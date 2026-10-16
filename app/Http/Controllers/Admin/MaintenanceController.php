@@ -32,8 +32,10 @@ class MaintenanceController extends Controller
     public function show(MaintenanceRequest $maintenance)
     {
         $maintenance->load(['user', 'room', 'resolvedBy']);
-
-        return view('admin.maintenance.show', compact('maintenance'));
+        return redirect()->route('admin.maintenance.index', [
+            'status' => $maintenance->status,
+            'open' => $maintenance->id,
+        ]);
     }
 
     public function update(Request $request, MaintenanceRequest $maintenance)

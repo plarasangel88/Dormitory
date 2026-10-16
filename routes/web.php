@@ -4,18 +4,29 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
+use App\Models\Announcement;
+use App\Models\MaintenanceRequest;
+
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\MaintenanceController;
-use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Student\MaintenanceController;
+use App\Http\Controllers\RoomTaskController;
+use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\AnnouncementController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\RoomController as AdminRoomController;
 use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\Admin\BillController as AdminBillController;
 use App\Http\Controllers\Admin\MaintenanceController as AdminMaintenanceController;
 use App\Http\Controllers\Student\ProfileController;
 use App\Http\Controllers\Student\PaymentController;
 use App\Http\Controllers\Student\RoomController;
+
+
+// ===============================
+// GENERAL ROUTES
+// ===============================
 
 Route::get('/', function () {
     return redirect('/login');
@@ -41,7 +52,11 @@ Route::post('/logout', function (Request $request) {
     return redirect('/login');
 })->name('logout');
 
-// ---- Forgot / Reset Password ----
+
+// ===============================
+// FORGOT / RESET PASSWORD
+// ===============================
+
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
     ->name('password.request');
 
@@ -60,7 +75,32 @@ Route::post('/reset-password', [ForgotPasswordController::class, 'reset'])
 // ===============================
 
 Route::get('/dashboard', function () {
-    return view('student.dashboard');
+    $user = Auth::user();
+    $announcements = Announcement::with('author')
+        ->feed()
+        ->take(10)
+        ->get();
+
+    $room = $user->room;
+    $payments = $user->payments;
+    $bills = $user->bills()->with('payments')->get();
+    if ($bills->isNotEmpty()) {
+        $paymentStatus = $bills->sum(fn ($bill) => $bill->balance) <= 0.01
+            ? 'Paid'
+            : 'Balance Due';
+    } else {
+        $paymentStatus = $payments->contains('status', 'pending')
+            ? 'Pending'
+            : ($payments->contains('status', 'verified') ? 'Paid' : 'No bills');
+    }
+    $maintenanceCount = MaintenanceRequest::where('user_id', $user->id)->count();
+
+    return view('student.dashboard', compact(
+        'announcements',
+        'room',
+        'paymentStatus',
+        'maintenanceCount'
+    ));
 })->middleware('auth')->name('dashboard');
 
 Route::get('/profile', [ProfileController::class, 'index'])
@@ -75,6 +115,24 @@ Route::get('/room', [RoomController::class, 'index'])
     ->middleware('auth')
     ->name('room');
 
+
+// ---- Room Tasks (Student) ----
+
+Route::post('/room/tasks', [RoomTaskController::class, 'store'])
+    ->middleware('auth')
+    ->name('room.tasks.store');
+
+Route::patch('/room/tasks/{task}/toggle', [RoomTaskController::class, 'toggle'])
+    ->middleware('auth')
+    ->name('room.tasks.toggle');
+
+Route::delete('/room/tasks/{task}', [RoomTaskController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('room.tasks.destroy');
+
+
+// ---- Student Payments ----
+
 Route::get('/payments', [PaymentController::class, 'index'])
     ->middleware('auth')
     ->name('payments');
@@ -83,7 +141,9 @@ Route::post('/payments', [PaymentController::class, 'store'])
     ->middleware('auth')
     ->name('payments.store');
 
-// ---- Maintenance (student) ----
+
+// ---- Maintenance (Student) ----
+
 Route::get('/maintenance', [MaintenanceController::class, 'index'])
     ->middleware('auth')
     ->name('maintenance.index');
@@ -101,14 +161,31 @@ Route::get('/maintenance/{maintenance}', [MaintenanceController::class, 'show'])
     ->name('maintenance.show');
 
 
+// ===============================
+// ADMIN ROUTES
+// ===============================
+
 Route::middleware(['auth', 'admin'])
     ->prefix('admin')
     ->group(function () {
 
+        // ---- Admin Dashboard ----
+
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('admin.dashboard');
 
+
+        // ---- Announcements ----
+
+        Route::post('/announcements', [AnnouncementController::class, 'store'])
+            ->name('admin.announcements.store');
+
+        Route::post('/announcements/{announcement}/delete', [AnnouncementController::class, 'destroy'])
+            ->name('admin.announcements.destroy');
+
+
         // ---- Students ----
+
         Route::get('/students', [StudentController::class, 'index'])
             ->name('admin.students.index');
 
@@ -121,10 +198,12 @@ Route::middleware(['auth', 'admin'])
         Route::delete('/students/{student}', [StudentController::class, 'destroy'])
             ->name('admin.students.destroy');
 
+
         // ---- Rooms ----
+
         Route::get('/rooms', [AdminRoomController::class, 'index'])
             ->name('admin.rooms.index');
-            
+
         Route::get('/rooms/{room}', [AdminRoomController::class, 'show'])
             ->name('admin.rooms.show');
 
@@ -137,7 +216,24 @@ Route::middleware(['auth', 'admin'])
         Route::delete('/rooms/{room}', [AdminRoomController::class, 'destroy'])
             ->name('admin.rooms.destroy');
 
-        // ---- Payments ----
+
+        // ---- Billing (Rent / Electricity / Water) ----
+
+        Route::get('/bills', [AdminBillController::class, 'index'])
+            ->name('admin.bills.index');
+
+        Route::post('/bills', [AdminBillController::class, 'store'])
+            ->name('admin.bills.store');
+
+        Route::put('/bills/{bill}', [AdminBillController::class, 'update'])
+            ->name('admin.bills.update');
+
+        Route::delete('/bills/{bill}', [AdminBillController::class, 'destroy'])
+            ->name('admin.bills.destroy');
+
+
+        // ---- Admin Payments ----
+
         Route::get('/payments', [AdminPaymentController::class, 'index'])
             ->name('admin.payments.index');
 
@@ -150,7 +246,9 @@ Route::middleware(['auth', 'admin'])
         Route::delete('/payments/{payment}', [AdminPaymentController::class, 'destroy'])
             ->name('admin.payments.destroy');
 
-        // ---- Maintenance ----
+
+        // ---- Maintenance (Admin) ----
+
         Route::get('/maintenance', [AdminMaintenanceController::class, 'index'])
             ->name('admin.maintenance.index');
 

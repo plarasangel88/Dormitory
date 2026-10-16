@@ -470,48 +470,23 @@
             .history-card { overflow-x: auto; }
         }
     </style>
+    @include('student.partials.theme')
 </head>
 <body>
     <div class="app-container">
         <!-- Sidebar Navigation (same skin as Student Dashboard; links unchanged) -->
-        <aside class="sidebar">
-            <div class="sidebar-brand">
-                <i class="fa-solid fa-building-user"></i>
-                <span>Dorm Portal</span>
-            </div>
-            <nav class="sidebar-menu">
-                <a href="/dashboard" class="menu-item {{ request()->is('dashboard') ? 'active' : '' }}">
-                    <i class="fa-solid fa-house"></i> Dashboard
-                </a>
-                <a href="/room" class="menu-item {{ request()->is('room*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-door-closed"></i> My Room
-                </a>
-                <a href="/payments" class="menu-item {{ request()->is('payments*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-wallet"></i> Payments
-                </a>
-                <a href="/maintenance" class="menu-item {{ request()->is('maintenance*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-wrench"></i> Maintenance
-                </a>
-                <a href="/profile" class="menu-item {{ request()->is('profile*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-circle-user"></i> Profile
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <form method="POST" action="/logout">
-                    @csrf
-                    <button type="submit" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
-                </form>
-            </div>
-        </aside>
+        @include('student.partials.sidebar')
 
         <!-- Main Workspace -->
         <main class="main-content">
             <!-- Header Bar (same skin as Student Dashboard) -->
             <header class="top-header">
+                <button class="student-menu-toggle" type="button" data-student-sidebar-toggle aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
                 <div class="search-bar">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" placeholder="Search...">
                 </div>
+                @include('student.partials.announcement-bell')
                 <div class="admin-profile-badge">
                     <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                     <div class="user-info">
@@ -574,6 +549,32 @@
                     </div>
                 </section>
 
+                <section class="card-panel" style="margin-bottom:20px">
+                    <h3><i class="fa-solid fa-file-invoice-dollar"></i> My Bills</h3>
+                    <div style="overflow-x:auto">
+                        <table>
+                            <thead>
+                                <tr><th>Billing Month</th><th>Due Date</th><th>Rent</th><th>Electricity</th><th>Water</th><th>Total</th><th>Balance</th></tr>
+                            </thead>
+                            <tbody>
+                                @forelse($bills as $bill)
+                                    <tr>
+                                        <td>{{ $bill->billing_month->format('F Y') }}</td>
+                                        <td>{{ $bill->due_date?->format('M d, Y') ?? '—' }}</td>
+                                        <td>₱{{ number_format($bill->rent, 2) }} <small>(₱{{ number_format($bill->balanceFor('rent'), 2) }} due)</small></td>
+                                        <td>₱{{ number_format($bill->electricity, 2) }} <small>(₱{{ number_format($bill->balanceFor('electricity'), 2) }} due)</small></td>
+                                        <td>₱{{ number_format($bill->water, 2) }} <small>(₱{{ number_format($bill->balanceFor('water'), 2) }} due)</small></td>
+                                        <td>₱{{ number_format($bill->total, 2) }}</td>
+                                        <td><strong>{{ $bill->balance <= 0 ? 'Settled' : '₱'.number_format($bill->balance, 2) }}</strong></td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="7">No bills have been posted for your account yet.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
                 <div class="payments-layout">
                     <div class="card-panel">
                         <h3><i class="fa-solid fa-money-bill-transfer"></i> Submit a Payment</h3>
@@ -589,6 +590,31 @@
                             <div class="form-group">
                                 <label for="amount">Amount (₱)</label>
                                 <input type="number" id="amount" name="amount" step="0.01" min="1" placeholder="e.g. 3500.00" value="{{ old('amount') }}" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="bill_id">Bill to pay (optional)</label>
+                                <select id="bill_id" name="bill_id">
+                                    <option value="">General payment (not linked to a bill)</option>
+                                    @foreach($bills as $bill)
+                                        @if($bill->balance > 0)
+                                            <option value="{{ $bill->id }}" {{ old('bill_id') == $bill->id ? 'selected' : '' }}>
+                                                {{ $bill->billing_month->format('F Y') }} · Balance ₱{{ number_format($bill->balance, 2) }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="applies_to">Apply to</label>
+                                <select id="applies_to" name="applies_to">
+                                    <option value="">Choose a bill item</option>
+                                    @foreach($billItems as $item)
+                                        <option value="{{ $item }}" {{ old('applies_to') === $item ? 'selected' : '' }}>{{ ucfirst($item) }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="form-hint">Choose a bill and item to have a verified payment reduce that balance. You can also submit an unallocated general payment.</div>
                             </div>
 
                             <div class="form-group">
@@ -649,5 +675,6 @@
             </div>
         </main>
     </div>
+    @include('student.partials.announcement-bell-script')
 </body>
 </html>

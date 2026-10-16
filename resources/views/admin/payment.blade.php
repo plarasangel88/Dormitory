@@ -398,6 +398,18 @@
             font-size: 0.85rem;
         }
 
+        .payment-tabs { display: flex; gap: 8px; margin: 0 0 20px; }
+        .payment-tab {
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;
+            border: 1px solid var(--border-color); border-radius: 8px; background: #FFF;
+            color: var(--text-secondary); font-size: 0.85rem; font-weight: 600; text-decoration: none;
+        }
+        .payment-tab.active { background: var(--navy-deep); border-color: var(--navy-deep); color: #FFF; }
+        .billing-form-grid { display: grid; grid-template-columns: repeat(3, minmax(150px, 1fr)); gap: 14px; }
+        .billing-check { display: flex; align-items: center; gap: 8px; margin: 14px 0; font-size: 0.82rem; color: var(--text-secondary); }
+        .billing-check input { width: auto; }
+        .billing-form-grid input, .billing-form-grid select { width: 100%; }
+
         .pagination-wrap { margin-top: 18px; display: flex; justify-content: flex-end; }
         .pagination-wrap nav { font-size: 0.8rem; }
 
@@ -549,10 +561,13 @@
                 <a href="{{ route('admin.rooms.index') }}" class="menu-item {{ request()->routeIs('admin.rooms.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-door-closed"></i> Rooms
                 </a>
-                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->is('admin/payments*') ? 'active' : '' }}">
+                <a href="{{ route('admin.payments.index', ['section' => 'billing']) }}" class="menu-item {{ $section === 'billing' ? 'active' : '' }}">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> Billing
+                </a>
+                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ $section === 'payments' ? 'active' : '' }}">
                     <i class="fa-solid fa-wallet"></i> Payments
                 </a>
-                <a href="/admin/maintenance" class="menu-item {{ request()->is('admin/maintenance*') ? 'active' : '' }}">
+                <a href="{{ route('admin.maintenance.index') }}" class="menu-item {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wrench"></i> Maintenance
                 </a>
             </nav>
@@ -568,10 +583,15 @@
         <main class="main-content">
             <!-- Header Bar -->
             <header class="top-header">
+                @if ($section === 'payments')
                 <form method="GET" class="search-bar">
+                    <input type="hidden" name="section" value="payments">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by student or reference no...">
                 </form>
+                @else
+                    <div></div>
+                @endif
                 <div class="admin-profile-badge">
                     <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                     <div class="user-info">
@@ -584,8 +604,8 @@
             <!-- Page Content -->
             <div class="dashboard-body">
                 <div class="welcome-banner">
-                    <h1>Manage Payments</h1>
-                    <p>Review student payments, update their status, and remove incorrect records.</p>
+                    <h1>{{ $section === 'billing' ? 'Billing & Payments' : 'Manage Payments' }}</h1>
+                    <p>{{ $section === 'billing' ? 'Create monthly room bills and track each student’s outstanding balance.' : 'Review student payments, update their status, and remove incorrect records.' }}</p>
                 </div>
 
                 @if (session('success'))
@@ -595,6 +615,98 @@
                     <div class="alert alert-error"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</div>
                 @endif
 
+                <nav class="payment-tabs" aria-label="Payment sections">
+                    <a class="payment-tab {{ $section === 'payments' ? 'active' : '' }}" href="{{ route('admin.payments.index', ['section' => 'payments']) }}"><i class="fa-solid fa-wallet"></i> Payment Records</a>
+                    <a class="payment-tab {{ $section === 'billing' ? 'active' : '' }}" href="{{ route('admin.payments.index', ['section' => 'billing', 'month' => $month->format('Y-m')]) }}"><i class="fa-solid fa-file-invoice-dollar"></i> Billing</a>
+                </nav>
+
+                @if ($section === 'billing')
+                <section class="card-panel" style="margin-bottom:20px">
+                    <div class="panel-header"><h3><i class="fa-solid fa-plus"></i> Create or update room bills</h3></div>
+                    <form action="{{ route('admin.bills.store') }}" method="POST">
+                        @csrf
+                        <div class="billing-form-grid">
+                            <div class="form-group">
+                                <label class="form-label" for="roomSelect">Room</label>
+                                <select name="room_id" id="roomSelect" class="form-select" required>
+                                    @forelse ($rooms as $room)
+                                        <option value="{{ $room->id }}" data-rate="{{ $room->monthly_rate ?? 0 }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
+                                            Room {{ $room->room_number }} ({{ $room->students_count }} students)
+                                        </option>
+                                    @empty
+                                        <option value="">No rooms available</option>
+                                    @endforelse
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="form-label" for="billingMonth">Billing month</label><input id="billingMonth" type="month" name="billing_month" class="form-control" value="{{ old('billing_month', $month->format('Y-m')) }}" required></div>
+                            <div class="form-group"><label class="form-label" for="dueDate">Due date</label><input id="dueDate" type="date" name="due_date" class="form-control" value="{{ old('due_date') }}"></div>
+                            <div class="form-group"><label class="form-label" for="rentInput">Rent per student</label><input id="rentInput" type="number" step="0.01" min="0" name="rent" class="form-control" value="{{ old('rent') }}" required></div>
+                            <div class="form-group"><label class="form-label" for="electricity">Electricity (room total)</label><input id="electricity" type="number" step="0.01" min="0" name="electricity" class="form-control" value="{{ old('electricity', 0) }}" required></div>
+                            <div class="form-group"><label class="form-label" for="water">Water (room total)</label><input id="water" type="number" step="0.01" min="0" name="water" class="form-control" value="{{ old('water', 0) }}" required></div>
+                            <div class="form-group"><label class="form-label" for="remarks">Remarks</label><input id="remarks" type="text" name="remarks" class="form-control" maxlength="255" value="{{ old('remarks') }}"></div>
+                        </div>
+                        <label class="billing-check"><input type="checkbox" name="split" value="1" {{ old('split', '1') ? 'checked' : '' }}> Split electricity and water evenly among assigned students</label>
+                        <button class="btn-save" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save bills</button>
+                    </form>
+                </section>
+
+                <section class="card-panel">
+                    <div class="panel-header">
+                        <h3><i class="fa-solid fa-file-invoice-dollar"></i> Bills for {{ $month->format('F Y') }}</h3>
+                        <form method="GET" action="{{ route('admin.payments.index') }}">
+                            <input type="hidden" name="section" value="billing">
+                            <input type="month" name="month" class="form-control" value="{{ $month->format('Y-m') }}" onchange="this.form.submit()" aria-label="Billing month">
+                        </form>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead><tr><th>Student</th><th>Room</th><th>Rent</th><th>Electricity</th><th>Water</th><th>Total</th><th>Due date</th><th>Balance</th><th>Actions</th></tr></thead>
+                            <tbody>
+                            @forelse ($bills as $bill)
+                                <tr>
+                                    <td>{{ $bill->student->name ?? 'Unknown student' }}</td>
+                                    <td>{{ $bill->room->room_number ?? '—' }}</td>
+                                    <td>₱{{ number_format($bill->rent, 2) }}</td>
+                                    <td>₱{{ number_format($bill->electricity, 2) }}</td>
+                                    <td>₱{{ number_format($bill->water, 2) }}</td>
+                                    <td class="amount-cell">₱{{ number_format($bill->total, 2) }}</td>
+                                    <td>{{ $bill->due_date?->format('M d, Y') ?? '—' }}</td>
+                                    <td><span class="status-pill {{ $bill->balance <= 0 ? 'paid' : 'pending' }}">{{ $bill->balance <= 0 ? 'Settled' : '₱'.number_format($bill->balance, 2) }}</span></td>
+                                    <td>
+                                        <button type="button" class="icon-btn edit" onclick="openModal('editBill{{ $bill->id }}')" aria-label="Edit bill"><i class="fa-solid fa-pen"></i></button>
+                                        <form action="{{ route('admin.bills.destroy', $bill) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete this bill?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="icon-btn delete" aria-label="Delete bill"><i class="fa-solid fa-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="9"><div class="empty-state">No bills for this month yet.</div></td></tr>
+                            @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                @foreach ($bills as $bill)
+                    <div class="modal-overlay" id="editBill{{ $bill->id }}">
+                        <div class="modal-card">
+                            <form action="{{ route('admin.bills.update', $bill) }}" method="POST">
+                                @csrf @method('PUT')
+                                <div class="modal-header"><h3><i class="fa-solid fa-pen"></i> Edit bill for {{ $bill->student->name ?? 'student' }}</h3><button type="button" class="modal-close" onclick="closeModal('editBill{{ $bill->id }}')">×</button></div>
+                                <div class="modal-body">
+                                    <div class="form-group"><label class="form-label">Rent</label><input type="number" step="0.01" min="0" name="rent" class="form-control" value="{{ $bill->rent }}" required></div>
+                                    <div class="form-group"><label class="form-label">Electricity</label><input type="number" step="0.01" min="0" name="electricity" class="form-control" value="{{ $bill->electricity }}" required></div>
+                                    <div class="form-group"><label class="form-label">Water</label><input type="number" step="0.01" min="0" name="water" class="form-control" value="{{ $bill->water }}" required></div>
+                                    <div class="form-group"><label class="form-label">Due date</label><input type="date" name="due_date" class="form-control" value="{{ $bill->due_date?->format('Y-m-d') }}"></div>
+                                    <div class="form-group"><label class="form-label">Remarks</label><input type="text" name="remarks" class="form-control" value="{{ $bill->remarks }}"></div>
+                                </div>
+                                <div class="modal-footer"><button type="button" class="btn-light" onclick="closeModal('editBill{{ $bill->id }}')">Cancel</button><button type="submit" class="btn-save">Save changes</button></div>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+                @else
                 <div class="card-panel">
                     <div class="panel-header">
                         <h3><i class="fa-solid fa-file-invoice-dollar"></i> Payment Records</h3>
@@ -615,24 +727,27 @@
                                 @forelse ($payments as $payment)
                                     @php
                                         $statusClasses = [
-                                            'paid'    => 'paid',
+                                            'verified' => 'paid',
+                                            'rejected' => 'overdue',
                                             'pending' => 'pending',
-                                            'overdue' => 'overdue',
                                         ];
                                     @endphp
                                     <tr>
                                         <td>
                                             <div class="row-cell">
-                                                <div class="row-avatar">{{ strtoupper(substr($payment->student->name ?? '?', 0, 1)) }}</div>
+                                                <div class="row-avatar">{{ strtoupper(substr($payment->user->name ?? '?', 0, 1)) }}</div>
                                                 <div>
-                                                    <div class="row-title">{{ $payment->student->name ?? 'Unknown Student' }}</div>
+                                                    <div class="row-title">{{ $payment->user->name ?? 'Unknown Student' }}</div>
                                                     <div class="row-sub">{{ $payment->reference_number ?? 'No reference' }}</div>
+                                                    @if ($payment->bill)
+                                                        <div class="row-sub">{{ ucfirst($payment->applies_to) }} · {{ $payment->bill->billing_month->format('F Y') }}</div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </td>
                                         <td class="amount-cell">₱{{ number_format($payment->amount, 2) }}</td>
-                                        <td><span class="method-pill">{{ str_replace('_', ' ', $payment->payment_method) }}</span></td>
-                                        <td>{{ \Illuminate\Support\Carbon::parse($payment->payment_date)->format('M d, Y') }}</td>
+                                        <td><span class="method-pill">{{ $payment->method }}</span></td>
+                                        <td>{{ ($payment->payment_date ?? $payment->created_at)?->format('M d, Y') }}</td>
                                         <td>
                                             <span class="status-pill {{ $statusClasses[$payment->status] ?? 'pending' }}">
                                                 {{ ucfirst($payment->status) }}
@@ -668,9 +783,9 @@
                                                 <div class="modal-body">
                                                     <div class="form-group">
                                                         <label class="form-label">Student</label>
-                                                        <select name="student_id" class="form-select" required>
+                                                        <select name="user_id" class="form-select" required>
                                                             @foreach ($students as $student)
-                                                                <option value="{{ $student->id }}" {{ $payment->student_id == $student->id ? 'selected' : '' }}>
+                                                                <option value="{{ $student->id }}" {{ $payment->user_id == $student->id ? 'selected' : '' }}>
                                                                     {{ $student->name }}
                                                                 </option>
                                                             @endforeach
@@ -683,25 +798,24 @@
                                                         </div>
                                                         <div class="form-group">
                                                             <label class="form-label">Payment Date</label>
-                                                            <input type="date" name="payment_date" class="form-control" value="{{ \Illuminate\Support\Carbon::parse($payment->payment_date)->format('Y-m-d') }}" required>
+                                                            <input type="date" class="form-control" value="{{ ($payment->payment_date ?? $payment->created_at)?->format('Y-m-d') }}" disabled>
                                                         </div>
                                                     </div>
                                                     <div class="form-row">
                                                         <div class="form-group">
                                                             <label class="form-label">Method</label>
-                                                            <select name="payment_method" class="form-select">
-                                                                <option value="cash" {{ $payment->payment_method === 'cash' ? 'selected' : '' }}>Cash</option>
-                                                                <option value="gcash" {{ $payment->payment_method === 'gcash' ? 'selected' : '' }}>GCash</option>
-                                                                <option value="bank_transfer" {{ $payment->payment_method === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                                                                <option value="other" {{ $payment->payment_method === 'other' ? 'selected' : '' }}>Other</option>
+                                                            <select name="method" class="form-select" required>
+                                                                <option value="Cash" {{ $payment->method === 'Cash' ? 'selected' : '' }}>Cash</option>
+                                                                <option value="GCash" {{ $payment->method === 'GCash' ? 'selected' : '' }}>GCash</option>
+                                                                <option value="Bank Transfer" {{ $payment->method === 'Bank Transfer' ? 'selected' : '' }}>Bank Transfer</option>
                                                             </select>
                                                         </div>
                                                         <div class="form-group">
                                                             <label class="form-label">Status</label>
                                                             <select name="status" class="form-select">
-                                                                <option value="paid" {{ $payment->status === 'paid' ? 'selected' : '' }}>Paid</option>
+                                                                <option value="verified" {{ $payment->status === 'verified' ? 'selected' : '' }}>Verified</option>
                                                                 <option value="pending" {{ $payment->status === 'pending' ? 'selected' : '' }}>Pending</option>
-                                                                <option value="overdue" {{ $payment->status === 'overdue' ? 'selected' : '' }}>Overdue</option>
+                                                                <option value="rejected" {{ $payment->status === 'rejected' ? 'selected' : '' }}>Rejected</option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -711,7 +825,7 @@
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Remarks</label>
-                                                        <input type="text" name="remarks" class="form-control" value="{{ $payment->remarks }}">
+                                                        <input type="text" name="notes" class="form-control" value="{{ $payment->notes }}">
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
@@ -736,6 +850,7 @@
                         {{ $payments->links() }}
                     </div>
                 </div>
+                @endif
             </div>
         </main>
     </div>

@@ -4,28 +4,36 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payment extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'student_id',
+        'user_id',
+        'bill_id',
+        'applies_to',
         'amount',
-        'payment_method',
+        'method',
         'status',
         'reference_number',
-        'payment_date',
-        'remarks',
+        'notes',
+        'qr_token',
     ];
 
     protected $casts = [
+        'amount' => 'decimal:2',
         'payment_date' => 'date',
-        'amount'       => 'decimal:2',
     ];
 
-    public function student()
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(User::class);
+    }
+
+    public function bill(): BelongsTo
+    {
+        return $this->belongsTo(Bill::class);
     }
 }
