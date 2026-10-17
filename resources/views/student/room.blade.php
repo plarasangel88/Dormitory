@@ -150,26 +150,19 @@
         @include('student.partials.sidebar')
 
         <main class="main-content">
-            <header class="top-header">
-                <button class="student-menu-toggle" type="button" data-student-sidebar-toggle aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
-                <div class="search-bar">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Search...">
-                </div>
-                @include('student.partials.announcement-bell')
-                <div class="admin-profile-badge">
-                    <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
-                    <div class="user-info">
-                        <span class="user-name">{{ auth()->user()->name }}</span>
-                        <span class="user-role">{{ strtoupper(auth()->user()->role) }}</span>
-                    </div>
-                </div>
-            </header>
+            @include('student.partials.page-header', ['title' => 'My Room', 'subtitle' => 'View your room assignment and amenities.'])
 
             <div class="dashboard-body">
                 <div class="welcome-banner">
-                    <h1>My Room</h1>
-                    <p>View your room assignment, roommates, daily tasks, and amenities</p>
+                    <div class="welcome-content">
+                        <div class="eyebrow">Your Dormitory, Your Space</div>
+                        <h1>My Room</h1>
+                        <p>View your room assignment, roommates, daily tasks, and amenities.</p>
+                    </div>
+                    <div class="welcome-date">
+                        <span><i class="fa-regular fa-calendar"></i> Today's Date</span>
+                        <strong>{{ now()->format('F d, Y') }}</strong>
+                    </div>
                 </div>
 
                 @if(session('success'))

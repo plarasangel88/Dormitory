@@ -320,27 +320,20 @@
         <!-- Main Workspace -->
         <main class="main-content">
             <!-- Header Bar (same skin as Student Dashboard) -->
-            <header class="top-header">
-                <button class="student-menu-toggle" type="button" data-student-sidebar-toggle aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
-                <div class="search-bar">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Search...">
-                </div>
-                @include('student.partials.announcement-bell')
-                <div class="admin-profile-badge">
-                    <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
-                    <div class="user-info">
-                        <span class="user-name">{{ auth()->user()->name }}</span>
-                        <span class="user-role">{{ strtoupper(auth()->user()->role) }}</span>
-                    </div>
-                </div>
-            </header>
+            @include('student.partials.page-header', ['title' => 'Maintenance', 'subtitle' => 'Submit a request and follow its status.'])
 
             <!-- Dashboard Content -->
             <div class="dashboard-body">
                 <div class="welcome-banner">
-                    <h1>Maintenance</h1>
-                    <p>Report an issue in your room and track its status.</p>
+                    <div class="welcome-content">
+                        <div class="eyebrow">Your Dormitory, Your Space</div>
+                        <h1>Maintenance</h1>
+                        <p>Report an issue in your room and track its status.</p>
+                    </div>
+                    <div class="welcome-date">
+                        <span><i class="fa-regular fa-calendar"></i> Today's Date</span>
+                        <strong>{{ now()->format('F d, Y') }}</strong>
+                    </div>
                 </div>
 
                 @if(session('success'))
@@ -360,7 +353,7 @@
                 @if($selectedRequest)
                     <div class="card-panel" style="margin-bottom: 22px;">
                         <h3><i class="fa-solid fa-clipboard-list"></i> Request Details</h3>
-                        <p><strong>{{ \Illuminate\Support\Str::after($selectedRequest->title, '] ') }}</strong> · {{ ucfirst($selectedRequest->priority) }} priority</p>
+                        <p><strong>{{ \Illuminate\Support\Str::startsWith($selectedRequest->title, '[') ? \Illuminate\Support\Str::before(\Illuminate\Support\Str::after($selectedRequest->title, '['), ']') : 'Other' }}</strong> &middot; {{ ucfirst($selectedRequest->priority) }} priority</p>
                         <p style="margin-top: 8px;">{{ $selectedRequest->description }}</p>
                         <p style="margin-top: 8px;">Status: {{ str_replace('_', ' ', ucfirst($selectedRequest->status)) }} · Submitted {{ $selectedRequest->created_at->format('M d, Y') }}</p>
                     </div>
@@ -418,11 +411,6 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="title">Title</label>
-                                <input type="text" id="title" name="title" placeholder="e.g. Ceiling light not working" value="{{ old('title') }}" required>
-                            </div>
-
-                            <div class="form-group">
                                 <label for="priority">Priority</label>
                                 <select id="priority" name="priority" required>
                                     <option value="low" {{ old('priority') == 'low' ? 'selected' : '' }}>Low</option>
@@ -448,7 +436,7 @@
                                 <tr>
                                     <th>Date</th>
                                     <th>Category</th>
-                                    <th>Title / Description</th>
+                                    <th>Description</th>
                                     <th>Priority</th>
                                     <th>Status</th>
                                     <th>Details</th>
@@ -459,10 +447,7 @@
                                     <tr>
                                         <td>{{ $req->created_at->format('M d, Y') }}</td>
                                         <td>{{ \Illuminate\Support\Str::startsWith($req->title, '[') ? \Illuminate\Support\Str::before(\Illuminate\Support\Str::after($req->title, '['), ']') : 'Other' }}</td>
-                                        <td>
-                                            <div class="title-cell">{{ \Illuminate\Support\Str::after($req->title, '] ') }}</div>
-                                            <div class="desc-cell">{{ \Illuminate\Support\Str::limit($req->description, 90) }}</div>
-                                        </td>
+                                        <td><div class="desc-cell">{{ \Illuminate\Support\Str::limit($req->description, 120) }}</div></td>
                                         <td><span class="badge badge-priority-{{ $req->priority }}">{{ $req->priority }}</span></td>
                                         <td><span class="badge badge-{{ $req->status }}">{{ str_replace('_', ' ', $req->status) }}</span></td>
                                         <td><a href="{{ route('maintenance.show', $req) }}">View</a></td>

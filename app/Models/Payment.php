@@ -17,7 +17,9 @@ class Payment extends Model
         'amount',
         'method',
         'status',
+        'payment_date',
         'reference_number',
+        'provider_reference',
         'notes',
         'qr_token',
     ];

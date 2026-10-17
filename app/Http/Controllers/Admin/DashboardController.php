@@ -13,25 +13,22 @@ class DashboardController extends Controller
     public function index()
     {
         $totalStudents = User::where('role', 'student')->count();
-        $totalRooms = Room::count();
-
-        // A room counts as occupied if it has at least one student
-        // assigned to it (via users.room_id), regardless of the
-        // room's `status` column, since that column isn't kept in
-        // sync with assignments anywhere else in the app yet.
-        $occupiedRooms = Room::has('students')->count();
-
+        $roomCapacity = Room::withCount('students')->get(['id', 'capacity']);
+        $totalRooms = $roomCapacity->count();
+        $totalBeds = (int) $roomCapacity->sum('capacity');
+        $occupiedBeds = (int) $roomCapacity->sum('students_count');
+        $vacantBeds = max(0, $totalBeds - $occupiedBeds);
         $pendingPayments = Payment::where('status', 'pending')->count();
         $totalCollected = Payment::where('status', 'verified')->sum('amount');
 
-        $occupancyRate = $totalRooms > 0
-            ? round(($occupiedRooms / $totalRooms) * 100, 1)
+        $occupancyRate = $totalBeds > 0
+            ? round(($occupiedBeds / $totalBeds) * 100, 1)
             : 0;
 
         $announcements = Announcement::with('author')->feed()->take(10)->get();
         $paymentMonitoring = Payment::with(['user.room'])
             ->latest()
-            ->take(10)
+            ->take(30)
             ->get()
             ->map(function (Payment $payment) {
                 $payment->student_name = $payment->user?->name ?? 'Unknown student';
@@ -49,7 +46,9 @@ class DashboardController extends Controller
         return view('admin.dashboard', compact(
             'totalStudents',
             'totalRooms',
-            'occupiedRooms',
+            'totalBeds',
+            'occupiedBeds',
+            'vacantBeds',
             'pendingPayments',
             'totalCollected',
             'occupancyRate',

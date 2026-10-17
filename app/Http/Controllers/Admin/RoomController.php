@@ -10,11 +10,20 @@ class RoomController extends Controller
 {
     public function show(Room $room)
     {
-        return redirect()->route('admin.rooms.index', ['search' => $room->room_number]);
+        $room->load(['students:id,room_id,name,email,course,contact_number,status']);
+
+        return view('admin.room-show', compact('room'));
     }
 
     public function index(Request $request)
     {
+        $roomCapacity = Room::query()->withCount('students')->get(['id', 'capacity']);
+        $totalRooms = $roomCapacity->count();
+        $totalBeds = (int) $roomCapacity->sum('capacity');
+        $occupiedBeds = (int) $roomCapacity->sum('students_count');
+        $vacantBeds = max(0, $totalBeds - $occupiedBeds);
+        $occupancyRate = $totalBeds > 0 ? round(($occupiedBeds / $totalBeds) * 100, 1) : 0;
+
         $query = Room::query()->withCount('students');
 
         if ($request->filled('search')) {
@@ -24,7 +33,14 @@ class RoomController extends Controller
 
         $rooms = $query->latest()->paginate(8)->withQueryString();
 
-        return view('admin.room', compact('rooms'));
+        return view('admin.room', compact(
+            'rooms',
+            'totalRooms',
+            'totalBeds',
+            'occupiedBeds',
+            'vacantBeds',
+            'occupancyRate'
+        ));
     }
 
     public function store(Request $request)

@@ -390,6 +390,8 @@
 
         .icon-btn:hover { background-color: var(--navy-deep); color: #FFF; border-color: var(--navy-deep); }
         .icon-btn.delete:hover { background-color: var(--danger-red); border-color: var(--danger-red); color: #FFF; }
+        .icon-btn.verify { color: #278451; border-color: #b9dfc8; background: #edf8f1; }
+        .icon-btn.verify:hover { color: #fff; background: #278451; border-color: #278451; }
 
         .empty-state {
             text-align: center;
@@ -410,8 +412,26 @@
         .billing-check input { width: auto; }
         .billing-form-grid input, .billing-form-grid select { width: 100%; }
 
-        .pagination-wrap { margin-top: 18px; display: flex; justify-content: flex-end; }
-        .pagination-wrap nav { font-size: 0.8rem; }
+        .pagination-wrap { margin-top: 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .pagination-pages { display: flex; align-items: center; gap: 6px; }
+        .pagination-page { min-width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; padding: 0 10px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff; color: var(--navy-deep); font-size: 12px; font-weight: 600; text-decoration: none; }
+        .pagination-page:hover { border-color: var(--amber); background: var(--paper); }
+        .pagination-page.current { border-color: var(--navy-deep); background: var(--navy-deep); color: #fff; }
+        .pagination-summary { color: var(--text-secondary); font-size: 12px; }
+        .gcash-qr-preview { margin: 0 0 14px; }
+        .gcash-qr-preview summary { width: fit-content; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff; color: var(--navy-deep); cursor: pointer; font-size: 12px; font-weight: 600; list-style: none; }
+        .gcash-qr-preview summary::-webkit-details-marker { display: none; }
+        .gcash-qr-preview[open] summary { margin-bottom: 12px; }
+        .gcash-qr-preview img { display: block; max-width: 180px; max-height: 180px; object-fit: contain; border: 1px solid var(--border-color); border-radius: 12px; padding: 8px; background: #fff; }
+        .data-table tr[hidden] { display: none !important; }
+        .older-transactions-wrap { display: flex; justify-content: center; padding: 14px 0 2px; }
+        .older-transactions-toggle { padding: 9px 14px; border: 1px solid var(--border-color); border-radius: 9px; background: #fff; color: var(--navy-deep); cursor: pointer; font-size: 12px; font-weight: 600; }
+        .older-transactions-toggle:hover { border-color: var(--amber); background: var(--paper); }
+        .transaction-history-tools { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+        .transaction-history-tools select { min-height: 38px; padding: 7px 10px; color: var(--navy-deep); font-size: 11px !important; }
+        .history-page-link { padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 9px; background: #fff; color: var(--navy-deep); font-size: 11px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+        .history-page-link:hover { border-color: var(--amber); background: var(--paper); }
+        @media (max-width: 700px) { .transaction-history-tools { justify-content: flex-start; } }
 
         /* Modal */
         .modal-overlay {
@@ -542,6 +562,7 @@
             .form-row { flex-direction: column; gap: 0; }
         }
     </style>
+    @include('admin.partials.theme')
 </head>
 <body>
     <div class="app-container">
@@ -561,11 +582,8 @@
                 <a href="{{ route('admin.rooms.index') }}" class="menu-item {{ request()->routeIs('admin.rooms.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-door-closed"></i> Rooms
                 </a>
-                <a href="{{ route('admin.payments.index', ['section' => 'billing']) }}" class="menu-item {{ $section === 'billing' ? 'active' : '' }}">
-                    <i class="fa-solid fa-file-invoice-dollar"></i> Billing
-                </a>
-                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ $section === 'payments' ? 'active' : '' }}">
-                    <i class="fa-solid fa-wallet"></i> Payments
+                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->routeIs('admin.payments.*', 'admin.bills.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-wallet"></i> Payments &amp; Billing
                 </a>
                 <a href="{{ route('admin.maintenance.index') }}" class="menu-item {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wrench"></i> Maintenance
@@ -583,6 +601,7 @@
         <main class="main-content">
             <!-- Header Bar -->
             <header class="top-header">
+                <div class="admin-page-heading"><strong>{{ $section === 'billing' ? 'Billing' : 'Payments' }}</strong><small>Manage student charges and transactions</small></div>
                 @if ($section === 'payments')
                 <form method="GET" class="search-bar">
                     <input type="hidden" name="section" value="payments">
@@ -604,7 +623,7 @@
             <!-- Page Content -->
             <div class="dashboard-body">
                 <div class="welcome-banner">
-                    <h1>{{ $section === 'billing' ? 'Billing & Payments' : 'Manage Payments' }}</h1>
+                    <div class="banner-feature-name" role="heading" aria-level="1">{{ $section === 'billing' ? 'Billing Management' : 'Payments Management' }}</div>
                     <p>{{ $section === 'billing' ? 'Create monthly room bills and track each student’s outstanding balance.' : 'Review student payments, update their status, and remove incorrect records.' }}</p>
                 </div>
 
@@ -613,6 +632,9 @@
                 @endif
                 @if (session('error'))
                     <div class="alert alert-error"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</div>
+                @endif
+                @if ($errors->any())
+                    <div class="alert alert-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $errors->first() }}</div>
                 @endif
 
                 <nav class="payment-tabs" aria-label="Payment sections">
@@ -643,7 +665,6 @@
                             <div class="form-group"><label class="form-label" for="rentInput">Rent per student</label><input id="rentInput" type="number" step="0.01" min="0" name="rent" class="form-control" value="{{ old('rent') }}" required></div>
                             <div class="form-group"><label class="form-label" for="electricity">Electricity (room total)</label><input id="electricity" type="number" step="0.01" min="0" name="electricity" class="form-control" value="{{ old('electricity', 0) }}" required></div>
                             <div class="form-group"><label class="form-label" for="water">Water (room total)</label><input id="water" type="number" step="0.01" min="0" name="water" class="form-control" value="{{ old('water', 0) }}" required></div>
-                            <div class="form-group"><label class="form-label" for="remarks">Remarks</label><input id="remarks" type="text" name="remarks" class="form-control" maxlength="255" value="{{ old('remarks') }}"></div>
                         </div>
                         <label class="billing-check"><input type="checkbox" name="split" value="1" {{ old('split', '1') ? 'checked' : '' }}> Split electricity and water evenly among assigned students</label>
                         <button class="btn-save" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save bills</button>
@@ -699,7 +720,6 @@
                                     <div class="form-group"><label class="form-label">Electricity</label><input type="number" step="0.01" min="0" name="electricity" class="form-control" value="{{ $bill->electricity }}" required></div>
                                     <div class="form-group"><label class="form-label">Water</label><input type="number" step="0.01" min="0" name="water" class="form-control" value="{{ $bill->water }}" required></div>
                                     <div class="form-group"><label class="form-label">Due date</label><input type="date" name="due_date" class="form-control" value="{{ $bill->due_date?->format('Y-m-d') }}"></div>
-                                    <div class="form-group"><label class="form-label">Remarks</label><input type="text" name="remarks" class="form-control" value="{{ $bill->remarks }}"></div>
                                 </div>
                                 <div class="modal-footer"><button type="button" class="btn-light" onclick="closeModal('editBill{{ $bill->id }}')">Cancel</button><button type="submit" class="btn-save">Save changes</button></div>
                             </form>
@@ -707,9 +727,47 @@
                     </div>
                 @endforeach
                 @else
+                <section class="card-panel" style="margin-bottom:20px">
+                    <div class="panel-header"><h3><i class="fa-brands fa-google-wallet"></i> Student GCash QR</h3></div>
+                    <p class="row-sub" style="margin-bottom:14px">Upload the official dormitory GCash QR. Students will see it when they choose GCash.</p>
+                    @if ($gcashQrUrl)
+                        <details class="gcash-qr-preview">
+                            <summary><i class="fa-regular fa-eye"></i> Show current GCash QR</summary>
+                            <img src="{{ $gcashQrUrl }}" alt="Current dormitory GCash QR">
+                        </details>
+                    @endif
+                    <form action="{{ route('admin.payments.gcash-qr') }}" method="POST" enctype="multipart/form-data" class="form-row">
+                        @csrf
+                        <div class="form-group"><label class="form-label" for="gcash_qr">{{ $gcashQrUrl ? 'Replace QR image' : 'Upload QR image' }}</label><input id="gcash_qr" name="gcash_qr" type="file" class="form-control" accept="image/png,image/jpeg,image/webp" required></div>
+                        <div class="form-group" style="align-self:end"><button class="btn-save" type="submit"><i class="fa-solid fa-upload"></i> Save GCash QR</button></div>
+                    </form>
+                </section>
                 <div class="card-panel">
                     <div class="panel-header">
                         <h3><i class="fa-solid fa-file-invoice-dollar"></i> Payment Records</h3>
+                        <div class="transaction-history-tools" aria-label="Transaction history controls">
+                            <select id="transactionStatusFilter" aria-label="Filter transactions by status">
+                                <option value="all">All statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="verified">Verified</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <select id="transactionDateOrder" aria-label="Sort transactions by date">
+                                <option value="newest">Newest first</option>
+                                <option value="oldest">Oldest first</option>
+                            </select>
+                            @if ($payments->count() > 5)
+                                <button type="button" class="older-transactions-toggle" id="olderTransactionsToggle" aria-expanded="false">
+                                    See older transactions ({{ $payments->count() - 5 }} more)
+                                </button>
+                            @endif
+                            @if ($payments->previousPageUrl())
+                                <a class="history-page-link" href="{{ $payments->previousPageUrl() }}">Newer page</a>
+                            @endif
+                            @if ($payments->nextPageUrl())
+                                <a class="history-page-link" href="{{ $payments->nextPageUrl() }}">Older page</a>
+                            @endif
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="data-table">
@@ -724,7 +782,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($payments as $payment)
+                                @forelse ($payments as $paymentIndex => $payment)
                                     @php
                                         $statusClasses = [
                                             'verified' => 'paid',
@@ -732,13 +790,14 @@
                                             'pending' => 'pending',
                                         ];
                                     @endphp
-                                    <tr>
+                                    <tr data-transaction-row data-transaction-status="{{ $payment->status }}" data-transaction-date="{{ ($payment->payment_date ?? $payment->created_at)?->format('Y-m-d H:i:s') }}" @if ($paymentIndex >= 5) hidden @endif>
                                         <td>
                                             <div class="row-cell">
                                                 <div class="row-avatar">{{ strtoupper(substr($payment->user->name ?? '?', 0, 1)) }}</div>
                                                 <div>
                                                     <div class="row-title">{{ $payment->user->name ?? 'Unknown Student' }}</div>
-                                                    <div class="row-sub">{{ $payment->reference_number ?? 'No reference' }}</div>
+                                                    <div class="row-sub">Transaction: {{ $payment->reference_number ?? 'No reference' }}</div>
+                                                    @if ($payment->provider_reference)<div class="row-sub">Provider: {{ $payment->provider_reference }}</div>@endif
                                                     @if ($payment->bill)
                                                         <div class="row-sub">{{ ucfirst($payment->applies_to) }} · {{ $payment->bill->billing_month->format('F Y') }}</div>
                                                     @endif
@@ -754,6 +813,14 @@
                                             </span>
                                         </td>
                                         <td>
+                                            @if ($payment->status === 'pending')
+                                                <form action="{{ route('admin.payments.verify', $payment) }}" method="POST" style="display:inline">
+                                                    @csrf
+                                                    <button type="submit" class="icon-btn verify" title="Verify payment" aria-label="Verify payment">
+                                                        <i class="fa-solid fa-check"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                             <button type="button" class="icon-btn edit" title="Edit"
                                                     onclick="openModal('editPaymentModal{{ $payment->id }}')">
                                                 <i class="fa-solid fa-pen"></i>
@@ -807,7 +874,6 @@
                                                             <select name="method" class="form-select" required>
                                                                 <option value="Cash" {{ $payment->method === 'Cash' ? 'selected' : '' }}>Cash</option>
                                                                 <option value="GCash" {{ $payment->method === 'GCash' ? 'selected' : '' }}>GCash</option>
-                                                                <option value="Bank Transfer" {{ $payment->method === 'Bank Transfer' ? 'selected' : '' }}>Bank Transfer</option>
                                                             </select>
                                                         </div>
                                                         <div class="form-group">
@@ -822,10 +888,6 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Reference Number</label>
                                                         <input type="text" name="reference_number" class="form-control" value="{{ $payment->reference_number }}" maxlength="50">
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Remarks</label>
-                                                        <input type="text" name="notes" class="form-control" value="{{ $payment->notes }}">
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
@@ -846,9 +908,6 @@
                         </table>
                     </div>
 
-                    <div class="pagination-wrap">
-                        {{ $payments->links() }}
-                    </div>
                 </div>
                 @endif
             </div>
@@ -867,6 +926,38 @@
                 if (e.target === overlay) overlay.classList.remove('open');
             });
         });
+
+        const transactionRows = [...document.querySelectorAll('[data-transaction-row]')];
+        const transactionStatusFilter = document.getElementById('transactionStatusFilter');
+        const transactionDateOrder = document.getElementById('transactionDateOrder');
+        const olderTransactionsToggle = document.getElementById('olderTransactionsToggle');
+        let showOlderTransactions = false;
+
+        const renderTransactions = () => {
+            const status = transactionStatusFilter?.value ?? 'all';
+            const direction = transactionDateOrder?.value === 'oldest' ? 1 : -1;
+            const matchingRows = transactionRows
+                .filter(row => status === 'all' || row.dataset.transactionStatus === status)
+                .sort((first, second) => direction * first.dataset.transactionDate.localeCompare(second.dataset.transactionDate));
+            const tbody = transactionRows[0]?.parentElement;
+            matchingRows.forEach(row => tbody?.append(row));
+            const visibleRows = showOlderTransactions ? matchingRows : matchingRows.slice(0, 5);
+            transactionRows.forEach(row => { row.hidden = !visibleRows.includes(row); });
+
+            if (olderTransactionsToggle) {
+                const olderCount = Math.max(0, matchingRows.length - 5);
+                olderTransactionsToggle.hidden = olderCount === 0;
+                olderTransactionsToggle.setAttribute('aria-expanded', String(showOlderTransactions));
+                olderTransactionsToggle.textContent = showOlderTransactions
+                    ? 'Show fewer transactions'
+                    : `See older transactions (${olderCount} more)`;
+            }
+        };
+
+        transactionStatusFilter?.addEventListener('change', () => { showOlderTransactions = false; renderTransactions(); });
+        transactionDateOrder?.addEventListener('change', () => { showOlderTransactions = false; renderTransactions(); });
+        olderTransactionsToggle?.addEventListener('click', () => { showOlderTransactions = !showOlderTransactions; renderTransactions(); });
+        renderTransactions();
     </script>
 </body>
 </html>

@@ -401,77 +401,29 @@
 
     <!-- Main content -->
     <div class="main">
-        <header class="student-shared-header">
-            <button class="student-menu-toggle" type="button" data-student-sidebar-toggle aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
-            <div class="page-heading"><strong>My Profile</strong><small>Manage your account information</small></div>
-            @include('student.partials.announcement-bell')
-            <div class="user-profile">
-                <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
-                <div class="user-info"><span class="user-name">{{ auth()->user()->name }}</span><span class="user-role">{{ strtoupper(auth()->user()->role) }}</span></div>
+        @include('student.partials.page-header', ['title' => 'My Profile', 'subtitle' => 'Manage your account information.'])
+        <div class="welcome-banner">
+            <div class="welcome-content">
+                <div class="eyebrow">Your Dormitory, Your Space</div>
+                <h1>My Profile</h1>
+                <p>Manage your personal details and account information.</p>
             </div>
-        </header>
-        <div class="page-head">
-            <div class="eyebrow-mark"></div>
-            <h1>My Profile</h1>
-            <p class="sub">View and update your account information.</p>
+            <div class="welcome-date">
+                <span><i class="fa-regular fa-calendar"></i> Today's Date</span>
+                <strong>{{ now()->format('F d, Y') }}</strong>
+            </div>
         </div>
-
-        <div class="section-title">Account Details</div>
-
-        <div class="profile-card">
-            <div class="profile-identity">
-                <div class="profile-avatar">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                </div>
-                <div>
-                    <div class="who">{{ auth()->user()->name }}</div>
-                    <div class="where">{{ auth()->user()->course }}</div>
-                </div>
-            </div>
-
-            @if(session('success'))
-                <div class="alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            @if($errors->any())
-                <div class="alert-error">
-                    <ul>
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <form action="{{ route('profile.update') }}" method="POST">
-                @csrf
-
-                <div class="form-group">
-                    <label for="name">Full Name</label>
-                    <input type="text" id="name" name="name" value="{{ old('name', auth()->user()->name) }}">
-                </div>
-
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" value="{{ old('email', auth()->user()->email) }}">
-                </div>
-
-                <div class="form-group">
-                    <label for="course">Course</label>
-                    <select id="course" name="course">
-                        @foreach(['BS Information Technology', 'BS Computer Science', 'BS Information Systems', 'BS Business Administration'] as $course)
-                            <option value="{{ $course }}" {{ old('course', auth()->user()->course) == $course ? 'selected' : '' }}>
-                                {{ $course }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="contact_number">Contact Number</label>
-                    <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number', auth()->user()->contact_number) }}" placeholder="e.g. 0917 123 4567">
+        <div class="profile-card profile-landscape">
+            <aside class="profile-summary">
+                <h2 class="profile-summary-title">Profile overview</h2>
+                <div class="profile-identity">
+                    <div class="profile-avatar">
+                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    </div>
+                    <div>
+                        <div class="who">{{ auth()->user()->name }}</div>
+                        <div class="where">{{ auth()->user()->course }}</div>
+                    </div>
                 </div>
 
                 <div class="account-facts">
@@ -487,6 +439,51 @@
                         <span class="label">Member Since</span>
                         <span class="value">{{ auth()->user()->created_at->format('M d, Y') }}</span>
                     </div>
+                </div>
+            </aside>
+
+            <form action="{{ route('profile.update') }}" method="POST">
+                @csrf
+                <h2 class="profile-form-title">Edit personal information</h2>
+
+                @if(session('success'))
+                    <div class="alert-success">{{ session('success') }}</div>
+                @endif
+
+                @if($errors->any())
+                    <div class="alert-error">
+                        <ul>
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" value="{{ old('name', auth()->user()->name) }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="{{ old('email', auth()->user()->email) }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="course">Course</label>
+                    <select id="course" name="course">
+                        @foreach(['Information Technology', 'Education', 'Criminology', 'Office Administration', 'Political Science', 'Communication'] as $course)
+                            <option value="{{ $course }}" {{ old('course', auth()->user()->course) == $course ? 'selected' : '' }}>
+                                {{ $course }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="contact_number">Contact Number</label>
+                    <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number', auth()->user()->contact_number) }}" placeholder="e.g. 0917 123 4567">
                 </div>
 
                 <button type="submit" class="btn-save">Save Changes</button>

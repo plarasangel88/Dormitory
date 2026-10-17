@@ -621,6 +621,7 @@
             .issue-desc { max-width: 140px; }
         }
     </style>
+    @include('admin.partials.theme')
 </head>
 <body>
     <div class="app-container">
@@ -640,8 +641,8 @@
                 <a href="{{ route('admin.rooms.index') }}" class="menu-item {{ request()->routeIs('admin.rooms.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-door-closed"></i> Rooms
                 </a>
-                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->is('admin/payments*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-wallet"></i> Payments
+                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->routeIs('admin.payments.*', 'admin.bills.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-wallet"></i> Payments &amp; Billing
                 </a>
                 <a href="{{ route('admin.maintenance.index') }}" class="menu-item {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wrench"></i> Maintenance
@@ -659,6 +660,7 @@
         <main class="main-content">
             <!-- Header Bar -->
             <header class="top-header">
+                <div class="admin-page-heading"><strong>Maintenance</strong><small>Review and manage student requests</small></div>
                 <form method="GET" class="search-bar">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by student or room...">
@@ -675,7 +677,7 @@
             <!-- Page Content -->
             <div class="dashboard-body">
                 <div class="welcome-banner">
-                    <h1>Manage Maintenance Requests</h1>
+                    <div class="banner-feature-name" role="heading" aria-level="1">Maintenance Management</div>
                     <p>Review student maintenance requests and update their status as work progresses.</p>
                 </div>
 
@@ -735,7 +737,7 @@
                                 <tr>
                                     <th>Student</th>
                                     <th>Room</th>
-                                    <th>Issue</th>
+                                    <th>Category / Description</th>
                                     <th>Submitted</th>
                                     <th>Status</th>
                                     <th>Actions</th>
@@ -756,7 +758,7 @@
                                         <td>{{ $request->room->room_number ?? 'N/A' }}</td>
                                         <td>
                                             <div class="row-title" style="font-size: 0.85rem;">
-                                                {{ $request->title ?? 'Maintenance Request' }}
+                                                {{ \Illuminate\Support\Str::startsWith($request->title ?? '', '[') ? \Illuminate\Support\Str::before(\Illuminate\Support\Str::after($request->title, '['), ']') : 'Other' }}
                                                 @if ($request->priority)
                                                     <span class="priority-pill {{ $request->priority }}">{{ $request->priority }}</span>
                                                 @endif
@@ -783,12 +785,13 @@
                                                 @csrf
                                                 @method('PUT')
                                                 <div class="modal-header">
-                                                    <h3><i class="fa-solid fa-wrench"></i> {{ $request->title ?? 'Maintenance Request' }}</h3>
+                                                    <h3><i class="fa-solid fa-wrench"></i> Request Details</h3>
                                                     <button type="button" class="modal-close" onclick="closeModal('maintenanceModal{{ $request->id }}')">✕</button>
                                                 </div>
                                                 <div class="modal-body">
                                                     <div class="req-description-view">
                                                         <strong>{{ $request->user->name ?? 'Unknown Student' }}</strong> &middot; Room {{ $request->room->room_number ?? 'N/A' }}<br>
+                                                        Category: {{ \Illuminate\Support\Str::startsWith($request->title ?? '', '[') ? \Illuminate\Support\Str::before(\Illuminate\Support\Str::after($request->title, '['), ']') : 'Other' }}<br>
                                                         {{ $request->description }}
                                                     </div>
                                                     <div class="form-group">

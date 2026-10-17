@@ -530,6 +530,13 @@
 
         .btn-save:hover { background: var(--navy-mid); }
 
+        .bed-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 22px; }
+        .bed-summary-card { padding: 18px 20px; background: #fff; border: 1px solid var(--border-color); border-radius: 14px; box-shadow: 0 5px 20px #172b4d0f; }
+        .bed-summary-label { display: block; color: var(--text-secondary); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+        .bed-summary-value { display: block; margin-top: 7px; color: var(--navy-deep); font-size: 23px; font-weight: 700; }
+        @media (max-width: 760px) { .bed-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 420px) { .bed-summary-grid { grid-template-columns: 1fr; } }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .app-container { flex-direction: column; }
@@ -540,6 +547,7 @@
             .dashboard-body { padding: 24px 20px; }
         }
     </style>
+    @include('admin.partials.theme')
 </head>
 <body>
     <div class="app-container">
@@ -559,8 +567,8 @@
                 <a href="{{ route('admin.rooms.index') }}" class="menu-item {{ request()->routeIs('admin.rooms.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-door-closed"></i> Rooms
                 </a>
-                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-wallet"></i> Payments
+                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->routeIs('admin.payments.*', 'admin.bills.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-wallet"></i> Payments &amp; Billing
                 </a>
                 <a href="{{ route('admin.maintenance.index') }}" class="menu-item {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wrench"></i> Maintenance
@@ -578,6 +586,7 @@
         <main class="main-content">
             <!-- Header Bar -->
             <header class="top-header">
+                <div class="admin-page-heading"><strong>Rooms</strong><small>Manage dormitory rooms</small></div>
                 <form method="GET" class="search-bar">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by room number...">
@@ -595,7 +604,7 @@
             <div class="dashboard-body">
                 <div class="welcome-banner">
                     <div>
-                        <h1>Manage Rooms</h1>
+                        <div class="banner-feature-name" role="heading" aria-level="1">Rooms Management</div>
                         <p>View, add, edit, and remove dormitory rooms.</p>
                     </div>
                     <button type="button" class="action-btn" onclick="openModal('addRoomModal')">
@@ -610,6 +619,13 @@
                     <div class="alert alert-error"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</div>
                 @endif
 
+                <section class="bed-summary-grid" aria-label="Dormitory bed occupancy summary">
+                    <div class="bed-summary-card"><span class="bed-summary-label">Rooms</span><strong class="bed-summary-value">{{ $totalRooms }}</strong></div>
+                    <div class="bed-summary-card"><span class="bed-summary-label">Total beds</span><strong class="bed-summary-value">{{ $totalBeds }}</strong></div>
+                    <div class="bed-summary-card"><span class="bed-summary-label">Occupied beds ({{ $occupancyRate }}%)</span><strong class="bed-summary-value">{{ $occupiedBeds }}</strong></div>
+                    <div class="bed-summary-card"><span class="bed-summary-label">Vacant beds</span><strong class="bed-summary-value">{{ $vacantBeds }}</strong></div>
+                </section>
+
                 <div class="card-panel">
                     <div class="panel-header">
                         <h3><i class="fa-solid fa-door-closed"></i> Room Directory</h3>
@@ -620,7 +636,7 @@
                                 <tr>
                                     <th>Room</th>
                                     <th>Capacity</th>
-                                    <th>Students Assigned</th>
+                                    <th>Beds Occupied</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
@@ -639,8 +655,8 @@
                                             <div class="row-cell">
                                                 <div class="row-avatar">{{ strtoupper(substr($room->room_number, 0, 2)) }}</div>
                                                 <div>
-                                                    <div class="row-title">{{ $room->room_number }}</div>
-                                                    <div class="row-sub">Room</div>
+                                                    <a href="{{ route('admin.rooms.show', $room) }}" class="row-title" style="text-decoration:none" aria-label="View tenants in room {{ $room->room_number }}">Room {{ $room->room_number }}</a>
+                                                    <div class="row-sub">Click to view room details and tenants</div>
                                                 </div>
                                             </div>
                                         </td>

@@ -36,6 +36,14 @@ After installation, ask the user to restart their terminal. If the agent needs t
 
 ## Agent Setup
 
+### Frontend-only exception
+
+For changes limited to `resources/views/**` and existing frontend CSS or JavaScript assets, Laravel Boost installation is not required. Preserve routes, controllers, models, middleware, authentication, database behavior, and business logic. Verify Blade templates with `php artisan view:clear` and `php artisan view:cache` when the task requests verification. For backend or application-logic changes, follow the Boost setup below.
+
+### User-declined Boost exception
+
+When the user has explicitly declined Laravel Boost installation and requests a payment/billing feature, do not install Boost. Proceed with the smallest scoped implementation using existing dependencies, preserve manual admin verification, and do not run migrations without explicit user authorization. Keep this exception limited to the requested payment/billing work.
+
 Install Laravel Boost from the application root before making application changes:
 
 ```sh

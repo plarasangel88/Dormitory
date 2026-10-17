@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Bill;
 use App\Models\Payment;
+use App\Models\PaymentSetting;
 use App\Models\Room;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class PaymentController extends Controller
@@ -50,7 +53,10 @@ class PaymentController extends Controller
             $rooms = Room::withCount('students')->orderBy('room_number')->get();
         }
 
-        return view('admin.payment', compact('payments', 'students', 'section', 'month', 'bills', 'rooms'));
+        $gcashQrPath = PaymentSetting::query()->value('gcash_qr_path');
+        $gcashQrUrl = $gcashQrPath ? route('payments.gcash-qr') : null;
+
+        return view('admin.payment', compact('payments', 'students', 'section', 'month', 'bills', 'rooms', 'gcashQrUrl'));
     }
 
     public function store(Request $request)
@@ -81,6 +87,42 @@ class PaymentController extends Controller
             ->with('success', 'Payment updated successfully.');
     }
 
+    public function verify(Payment $payment)
+    {
+        if ($payment->status !== 'pending') {
+            return redirect()
+                ->route('admin.payments.index')
+                ->with('success', 'This payment has already been reviewed.');
+        }
+
+        DB::transaction(function () use ($payment) {
+            Payment::where('reference_number', $payment->reference_number)
+                ->where('user_id', $payment->user_id)
+                ->where('status', 'pending')
+                ->update(['status' => 'verified', 'payment_date' => now()->toDateString()]);
+        });
+
+        return redirect()
+            ->route('admin.payments.index')
+            ->with('success', 'Payment verified and marked as received.');
+    }
+
+    public function updateGcashQr(Request $request)
+    {
+        $validated = $request->validate([
+            'gcash_qr' => ['required', 'image', 'mimes:png,jpg,jpeg,webp', 'max:4096'],
+        ]);
+
+        $setting = PaymentSetting::firstOrCreate([]);
+        if ($setting->gcash_qr_path) {
+            Storage::disk('public')->delete($setting->gcash_qr_path);
+        }
+        $setting->update(['gcash_qr_path' => $validated['gcash_qr']->store('payment/qr', 'public')]);
+
+        return redirect()->route('admin.payments.index', ['section' => 'payments'])
+            ->with('success', 'GCash QR code updated.');
+    }
+
     public function destroy(Payment $payment)
     {
         $payment->delete();
@@ -97,7 +139,7 @@ class PaymentController extends Controller
             'bill_id'          => ['sometimes', 'nullable', Rule::exists('bills', 'id')->where(fn ($query) => $query->where('student_id', $request->input('user_id')))],
             'applies_to'       => ['sometimes', 'nullable', 'required_with:bill_id', 'in:rent,electricity,water'],
             'amount'           => ['required', 'numeric', 'min:0'],
-            'method'           => ['required', 'in:GCash,Bank Transfer,Cash'],
+            'method'           => ['required', 'in:GCash,Cash'],
             'status'           => ['required', 'in:pending,verified,rejected'],
             'reference_number' => ['nullable', 'string', 'max:255'],
             'notes'            => ['nullable', 'string', 'max:500'],

@@ -283,6 +283,28 @@
             .panel { min-width: 0; padding: 32px 24px 48px; }
         }
     </style>
+    @include('auth.partials.theme')
+    <style>
+        /* Keep the top of the tall registration form in view when the page opens. */
+        .panel {
+            align-items: flex-start !important;
+            justify-content: center !important;
+            padding: 32px 40px !important;
+        }
+        .form-card {
+            width: 100% !important;
+            max-width: 450px !important;
+            margin: 0 auto !important;
+            padding: clamp(24px, 3vw, 38px) !important;
+            border: 1px solid #e8eaf0 !important;
+            border-radius: 22px !important;
+            background: #fff !important;
+            box-shadow: 0 18px 50px #172b4d12 !important;
+        }
+        .alert-error { font-size: 11px !important; }
+        .alert-error strong,
+        .alert-error li { font-size: 11px !important; }
+    </style>
 </head>
 <body>
 
@@ -350,36 +372,44 @@
             <h2>Create your account</h2>
             <p class="sub">Fill in your details to register for the dormitory system.</p>
 
-            <form action="/register" method="POST">
+            @if ($errors->any())
+                <div class="alert-error" role="alert">
+                    <strong>Please review your information:</strong>
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form action="/register" method="POST" autocomplete="off">
                 @csrf
                 <div class="form-group">
                     <label for="name">Full Name</label>
-                    <input type="text" id="name" name="name" placeholder="Angel Plaras" required>
+                    <input type="text" id="name" name="name" placeholder="Angel Plaras" value="{{ old('name') }}" autocomplete="name" required>
                 </div>
                 <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" placeholder="student@example.com" required>
+                    <input type="email" id="email" name="email" placeholder="student@example.com" value="{{ old('email') }}" autocomplete="email" required>
                 </div>
                 <div class="form-group">
                     <label for="course">Course</label>
                     <select name="course" id="course" required>
-                        <option value="" disabled selected>Select a course</option>
-                        <option value="BS Information Technology">BS Information Technology</option>
-                        <option value="BS Office Administration">BS Computer Science</option>
-                        <option value="BS Criminology">BS Information Systems</option>
-                        <option value="BS Elementary Education">BS Business Administration</option>
-                        <option value="BS Political Science">BS Business Administration</option>
-                        <option value="BS Communication">BS Business Administration</option>
+                        <option value="" disabled {{ old('course') ? '' : 'selected' }}>Select a course</option>
+                        @foreach(['Information Technology', 'Education', 'Criminology', 'Office Administration', 'Political Science', 'Communication'] as $course)
+                            <option value="{{ $course }}" {{ old('course') === $course ? 'selected' : '' }}>{{ $course }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="angelplaras" required>
+                    <input type="text" id="username" name="username" placeholder="angelplaras" value="{{ old('username') }}" autocomplete="off" autocapitalize="none" spellcheck="false" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
                     <div class="password-wrapper">
-                        <input type="password" id="password" name="password" placeholder="••••••••" required>
+                        <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="new-password" required>
                         <span class="password-toggle" id="togglePassword" role="button" tabindex="0" aria-label="Show password">
                             <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#5B6478" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -387,6 +417,7 @@
                             </svg>
                         </span>
                     </div>
+                    <small class="password-hint">Use at least 8 characters with uppercase and lowercase letters, a number, and a symbol. It must differ from your username.</small>
                 </div>
 
                 <button type="submit" class="btn-submit">Register Account</button>

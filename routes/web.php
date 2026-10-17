@@ -141,6 +141,14 @@ Route::post('/payments', [PaymentController::class, 'store'])
     ->middleware('auth')
     ->name('payments.store');
 
+Route::get('/payments/receipt/{reference}', [PaymentController::class, 'receipt'])
+    ->middleware('auth')
+    ->name('payments.receipt');
+
+Route::get('/payments/gcash-qr', [PaymentController::class, 'gcashQr'])
+    ->middleware('auth')
+    ->name('payments.gcash-qr');
+
 
 // ---- Maintenance (Student) ----
 
@@ -242,6 +250,12 @@ Route::middleware(['auth', 'admin'])
 
         Route::put('/payments/{payment}', [AdminPaymentController::class, 'update'])
             ->name('admin.payments.update');
+
+        Route::post('/payments/{payment}/verify', [AdminPaymentController::class, 'verify'])
+            ->name('admin.payments.verify');
+
+        Route::post('/payments/gcash-qr', [AdminPaymentController::class, 'updateGcashQr'])
+            ->name('admin.payments.gcash-qr');
 
         Route::delete('/payments/{payment}', [AdminPaymentController::class, 'destroy'])
             ->name('admin.payments.destroy');

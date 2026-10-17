@@ -17,14 +17,29 @@ class RegisterController extends Controller
             'course'   => [
                 'required',
                 Rule::in([
-                    'BS Information Technology',
-                    'BS Computer Science',
-                    'BS Information Systems',
-                    'BS Business Administration'
+                    'Information Technology',
+                    'Education',
+                    'Criminology',
+                    'Office Administration',
+                    'Political Science',
+                    'Communication',
                 ])
             ],
-            'username' => 'required|unique:users,username',
-            'password' => 'required|min:6',
+            'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'different:username',
+                'regex:/[a-z]/',
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
+                'regex:/[^A-Za-z0-9]/',
+            ],
+        ], [
+            'password.min' => 'The password must be at least 8 characters long.',
+            'password.different' => 'The password must be different from your username.',
+            'password.regex' => 'The password must include lowercase and uppercase letters, a number, and a symbol.',
         ]);
 
         User::create([

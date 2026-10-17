@@ -714,6 +714,7 @@
             .toolbar .search-bar { width: 100%; }
         }
     </style>
+    @include('admin.partials.theme')
 </head>
 <body>
     <div class="app-container">
@@ -733,8 +734,8 @@
                 <a href="{{ route('admin.rooms.index') }}" class="menu-item {{ request()->routeIs('admin.rooms.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-door-closed"></i> Rooms
                 </a>
-                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-wallet"></i> Payments
+                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->routeIs('admin.payments.*', 'admin.bills.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-wallet"></i> Payments &amp; Billing
                 </a>
                 <a href="{{ route('admin.maintenance.index') }}" class="menu-item {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wrench"></i> Maintenance
@@ -752,6 +753,7 @@
         <main class="main-content">
             <!-- Header Bar (identical to Dashboard) -->
             <header class="top-header">
+                <div class="admin-page-heading"><strong>Students</strong><small>Manage student records</small></div>
                 <div class="search-bar">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" placeholder="Search student name, room #, or ID...">
@@ -768,7 +770,7 @@
             <div class="dashboard-body">
                 <div class="welcome-banner">
                     <div>
-                        <h1>Manage Students</h1>
+                        <div class="banner-feature-name" role="heading" aria-level="1">Students Management</div>
                         <p>View, add, edit, and remove student records.</p>
                     </div>
                 </div>
@@ -813,7 +815,7 @@
                                     <tr>
                                         <td>
                                             <div class="student-cell clickable" role="button" tabindex="0"
-                                                 title="View student information"
+                                                 title="View student profile"
                                                  onclick="openModal('viewStudentModal{{ $student->id }}')"
                                                  onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openModal('viewStudentModal{{ $student->id }}'); }">
                                                 <div class="avatar">{{ strtoupper(substr($student->name, 0, 1)) }}</div>
@@ -844,6 +846,10 @@
                                         </td>
                                         <td>
                                             <div class="table-actions">
+                                                <button type="button" class="table-btn secondary" title="View profile" aria-label="View profile for {{ $student->name }}"
+                                                        onclick="openModal('viewStudentModal{{ $student->id }}')">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
                                                 <button type="button" class="table-btn secondary" title="Edit"
                                                         onclick="openModal('editStudentModal{{ $student->id }}')">
                                                     <i class="fa-solid fa-pen"></i>
@@ -865,7 +871,7 @@
                                     <div class="modal-overlay" id="viewStudentModal{{ $student->id }}">
                                         <div class="modal-card">
                                             <div class="modal-header">
-                                                <h3><i class="fa-solid fa-id-card"></i> Student Information</h3>
+                                                <h3><i class="fa-solid fa-id-card"></i> Student Profile</h3>
                                                 <button type="button" class="modal-close" onclick="closeModal('viewStudentModal{{ $student->id }}')">✕</button>
                                             </div>
                                             <div class="modal-body">
@@ -880,6 +886,14 @@
                                                 <div class="detail-row">
                                                     <span class="detail-label"><i class="fa-solid fa-phone"></i> Contact</span>
                                                     <span class="detail-value">{{ $student->contact_number ?? '—' }}</span>
+                                                </div>
+                                                <div class="detail-row">
+                                                    <span class="detail-label"><i class="fa-solid fa-graduation-cap"></i> Course</span>
+                                                    <span class="detail-value">{{ $student->course ?: '—' }}</span>
+                                                </div>
+                                                <div class="detail-row">
+                                                    <span class="detail-label"><i class="fa-solid fa-at"></i> Username</span>
+                                                    <span class="detail-value">{{ $student->username ?: '—' }}</span>
                                                 </div>
                                                 <div class="detail-row">
                                                     <span class="detail-label"><i class="fa-solid fa-door-closed"></i> Room</span>

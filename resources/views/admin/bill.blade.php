@@ -44,6 +44,7 @@
         .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
         @media (max-width: 760px) { .shell { display: block; } .sidebar { width: 100%; } .nav { display: flex; flex-wrap: wrap; } .nav a { padding: 9px; } main { padding: 18px 12px; } .form-grid { grid-template-columns: 1fr; } }
     </style>
+    @include('admin.partials.theme')
 </head>
 <body>
 <div class="shell">
@@ -53,8 +54,7 @@
             <a href="{{ route('admin.dashboard') }}"><i class="fa-solid fa-house"></i> Dashboard</a>
             <a href="{{ route('admin.students.index') }}"><i class="fa-solid fa-user-graduate"></i> Students</a>
             <a href="{{ route('admin.rooms.index') }}"><i class="fa-solid fa-door-closed"></i> Rooms</a>
-            <a class="active" href="{{ route('admin.bills.index') }}"><i class="fa-solid fa-file-invoice-dollar"></i> Billing</a>
-            <a href="{{ route('admin.payments.index') }}"><i class="fa-solid fa-wallet"></i> Payments</a>
+            <a class="active" href="{{ route('admin.payments.index') }}"><i class="fa-solid fa-wallet"></i> Payments &amp; Billing</a>
             <a href="{{ route('admin.maintenance.index') }}"><i class="fa-solid fa-wrench"></i> Maintenance</a>
         </nav>
         <form class="logout" method="POST" action="{{ route('logout') }}">
@@ -64,8 +64,17 @@
     </aside>
 
     <main>
-        <h1>Monthly Billing</h1>
-        <p class="sub">Create room bills for rent, electricity, and water. Students can view balances under Payments.</p>
+        <header class="top-header">
+            <div class="admin-page-heading"><strong>Billing</strong><small>Create and review monthly room bills</small></div>
+            <div class="admin-profile-badge">
+                <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+                <div class="user-info"><span class="user-name">{{ auth()->user()->name }}</span><span class="user-role">ADMIN</span></div>
+            </div>
+        </header>
+        <div class="welcome-banner">
+            <div class="banner-feature-name" role="heading" aria-level="1">Billing Management</div>
+            <p>Create room bills for rent, electricity, and water. Students can view balances under Payments.</p>
+        </div>
 
         @if (session('success')) <div class="alert success">{{ session('success') }}</div> @endif
         @if ($errors->any())
@@ -94,7 +103,6 @@
                     <div><label for="rentInput">Rent per student</label><input id="rentInput" type="number" step="0.01" min="0" name="rent" value="{{ old('rent') }}" required></div>
                     <div><label for="electricity">Electricity (room total)</label><input id="electricity" type="number" step="0.01" min="0" name="electricity" value="{{ old('electricity', 0) }}" required></div>
                     <div><label for="water">Water (room total)</label><input id="water" type="number" step="0.01" min="0" name="water" value="{{ old('water', 0) }}" required></div>
-                    <div><label for="remarks">Remarks (optional)</label><input id="remarks" type="text" name="remarks" maxlength="255" value="{{ old('remarks') }}" placeholder="Meter reading or note"></div>
                 </div>
                 <label class="check"><input type="checkbox" name="split" value="1" @checked(old('split', '1'))> Split electricity and water evenly among assigned students</label>
                 <button class="primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save bills</button>
@@ -145,7 +153,6 @@
                     <div><label>Electricity</label><input type="number" step="0.01" min="0" name="electricity" value="{{ $bill->electricity }}" required></div>
                     <div><label>Water</label><input type="number" step="0.01" min="0" name="water" value="{{ $bill->water }}" required></div>
                     <div><label>Due date</label><input type="date" name="due_date" value="{{ $bill->due_date?->format('Y-m-d') }}"></div>
-                    <div><label>Remarks</label><input type="text" name="remarks" maxlength="255" value="{{ $bill->remarks }}"></div>
                     <div class="dialog-actions">
                         <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
                         <button class="primary" type="submit">Save changes</button>

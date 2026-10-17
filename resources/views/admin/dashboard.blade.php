@@ -278,6 +278,10 @@
 
         .data-table tbody tr[data-href] { cursor: pointer; transition: background-color 0.15s ease; }
         .data-table tbody tr[data-href]:hover, .data-table tbody tr[data-href]:focus-visible { background-color: var(--paper); outline: none; }
+        .data-table tbody tr[hidden] { display: none !important; }
+        .transactions-toggle-wrap { padding-top: 12px; text-align: center; }
+        .transactions-toggle { border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 13px; background: #fff; color: var(--navy-deep); font: 600 12px 'Inter', sans-serif; cursor: pointer; }
+        .transactions-toggle:hover { background: var(--paper); border-color: var(--amber); }
 
         .status-pill { padding: 4px 10px; border-radius: 12px; font-size: 0.68rem; font-weight: 700; display: inline-block; }
         .status-pill.pending { background-color: #FBEBD4; color: #A9721F; }
@@ -353,8 +357,9 @@
             .user-info { display: none; }
         }
     </style>
+    @include('admin.partials.theme')
 </head>
-<body>
+<body class="admin-dashboard">
     @php
         // Safe route helper: falls back to the index page if a named route isn't defined yet.
         $studentCreate = Route::has('admin.students.create') ? route('admin.students.create') : route('admin.students.index');
@@ -381,11 +386,8 @@
                 <a href="{{ route('admin.rooms.index') }}" class="menu-item {{ request()->routeIs('admin.rooms.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-door-closed"></i> Rooms
                 </a>
-                <a href="{{ route('admin.payments.index', ['section' => 'billing']) }}" class="menu-item {{ request()->routeIs('admin.payments.*', 'admin.bills.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-file-invoice-dollar"></i> Payments & Billing
-                </a>
-                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}">
-                    <i class="fa-solid fa-wallet"></i> Payments
+                <a href="{{ route('admin.payments.index') }}" class="menu-item {{ request()->routeIs('admin.payments.*', 'admin.bills.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-wallet"></i> Payments &amp; Billing
                 </a>
                 <a href="{{ route('admin.maintenance.index') }}" class="menu-item {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-wrench"></i> Maintenance
@@ -405,6 +407,7 @@
                 <button class="menu-toggle" type="button" data-action="toggle-sidebar" aria-label="Toggle menu">
                     <i class="fa-solid fa-bars"></i>
                 </button>
+                <div class="admin-page-heading"><strong>Admin Dashboard</strong><small>Dormitory overview and activity</small></div>
 
                 <!-- Search: filters the payment table live; Enter searches the Students page -->
                 <form class="search-bar" method="GET" action="{{ route('admin.students.index') }}" role="search">
@@ -432,7 +435,7 @@
 
             <div class="dashboard-body">
                 <div class="welcome-banner">
-                    <h1>Welcome, {{ auth()->user()->name }}!</h1>
+                    <div class="banner-feature-name" role="heading" aria-level="1">Welcome, Admin!</div>
                     <p>Here's an overview of the dormitory system status today.</p>
                 </div>
 
@@ -448,15 +451,15 @@
                     <a href="{{ route('admin.rooms.index') }}" class="metric-card">
                         <div class="metric-icon orange"><i class="fa-solid fa-bed"></i></div>
                         <div class="metric-info">
-                            <span class="metric-title">TOTAL ROOMS</span>
-                            <div class="metric-value">{{ $totalRooms ?? 0 }}</div>
+                            <span class="metric-title">TOTAL BEDS</span>
+                            <div class="metric-value">{{ $totalBeds ?? 0 }} <small>across {{ $totalRooms ?? 0 }} rooms</small></div>
                         </div>
                     </a>
-                    <a href="{{ route('admin.rooms.index') }}?status=occupied" class="metric-card">
+                    <a href="{{ route('admin.rooms.index') }}" class="metric-card">
                         <div class="metric-icon green"><i class="fa-solid fa-chart-pie"></i></div>
                         <div class="metric-info">
-                            <span class="metric-title">OCCUPANCY RATE</span>
-                            <div class="metric-value">{{ $occupancyRate ?? 0 }}% <small>({{ $occupiedRooms ?? 0 }} Occupied)</small></div>
+                            <span class="metric-title">BED OCCUPANCY</span>
+                            <div class="metric-value">{{ $occupancyRate ?? 0 }}% <small>{{ $occupiedBeds ?? 0 }} occupied · {{ $vacantBeds ?? 0 }} vacant</small></div>
                         </div>
                     </a>
                     <a href="{{ route('admin.payments.index') }}" class="metric-card">
@@ -495,10 +498,7 @@
                                     <i class="fa-solid fa-door-open"></i> Assign Room
                                 </a>
                                 <a href="{{ route('admin.payments.index') }}" class="action-btn">
-                                    <i class="fa-solid fa-wallet"></i> Manage Payments
-                                </a>
-                                <a href="{{ route('admin.payments.index', ['section' => 'billing']) }}" class="action-btn">
-                                    <i class="fa-solid fa-file-invoice"></i> Manage Billing
+                                    <i class="fa-solid fa-wallet"></i> Manage Payments &amp; Billing
                                 </a>
                             </div>
                         </div>
@@ -576,9 +576,9 @@
                                         </tr>
                                     </thead>
                                     <tbody id="paymentBody">
-                                        @forelse ($paymentMonitoring ?? [] as $payment)
+                                        @forelse ($paymentMonitoring ?? [] as $paymentIndex => $payment)
                                             @php $status = strtolower($payment->status); @endphp
-                                            <tr data-status="{{ $status }}">
+                                            <tr data-status="{{ $status }}" data-payment-index="{{ $paymentIndex }}" @if($paymentIndex >= 6) hidden @endif>
                                                 <td><strong>{{ $payment->student_name }}</strong></td>
                                                 <td>{{ $payment->room_number ?? 'Unassigned' }}</td>
                                                 <td>₱{{ number_format($payment->amount_due, 2) }}</td>
@@ -596,6 +596,14 @@
                                         @endforelse
                                     </tbody>
                                 </table>
+                                @if (($paymentMonitoring ?? collect())->count() > 6)
+                                    <div class="transactions-toggle-wrap">
+                                        <button type="button" class="transactions-toggle" id="paymentMoreButton">
+                                            <i class="fa-solid fa-clock-rotate-left"></i>
+                                            Show older transactions ({{ $paymentMonitoring->count() - 6 }} more)
+                                        </button>
+                                    </div>
+                                @endif
                                 <p id="noMatch" style="display:none; text-align:center; color: var(--text-secondary); font-size:0.85rem; padding:16px 0;">No matching records.</p>
                             </div>
                         </div>
@@ -777,21 +785,48 @@
 
         /* ---------- Filters + live search for payment table ---------- */
         let statusFilter = 'all';
+        let paymentVisibleLimit = 6;
+        const paymentMoreButton = $('#paymentMoreButton');
 
-        function applyFilters() {
+        function paymentRowMatches(row) {
             const q = ($('#globalSearch').value || '').toLowerCase().trim();
-            let shown = 0;
-            const rows = $$('#paymentBody tr[data-status]');
-            rows.forEach(r => {
-                const okStatus = statusFilter === 'all' || r.dataset.status === statusFilter;
-                const okText = !q || r.textContent.toLowerCase().includes(q);
-                r.style.display = okStatus && okText ? '' : 'none';
-                if (okStatus && okText) shown++;
-            });
-            $('#noMatch').style.display = rows.length && !shown ? 'block' : 'none';
+            const okStatus = statusFilter === 'all' || row.dataset.status === statusFilter;
+            const okText = !q || row.textContent.toLowerCase().includes(q);
+            return okStatus && okText;
         }
 
+        function applyFilters() {
+            let shown = 0;
+            let matching = 0;
+            const rows = $$('#paymentBody tr[data-status]');
+            rows.forEach(r => {
+                const matches = paymentRowMatches(r);
+                if (matches) matching++;
+                const withinLimit = matches && matching <= paymentVisibleLimit;
+                r.hidden = !withinLimit;
+                r.style.display = matches ? '' : 'none';
+                if (withinLimit) shown++;
+            });
+            $('#noMatch').style.display = rows.length && !matching ? 'block' : 'none';
+
+            if (paymentMoreButton) {
+                if (paymentVisibleLimit >= matching) {
+                    paymentMoreButton.innerHTML = '<i class="fa-solid fa-chevron-up"></i> Show fewer transactions';
+                } else {
+                    paymentMoreButton.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> Show older transactions (' + (matching - paymentVisibleLimit) + ' more)';
+                }
+                paymentMoreButton.hidden = matching <= 6;
+            }
+        }
+
+        paymentMoreButton?.addEventListener('click', () => {
+            const matchingCount = $$('#paymentBody tr[data-status]').filter(paymentRowMatches).length;
+            paymentVisibleLimit = paymentVisibleLimit >= matchingCount ? 6 : Math.min(paymentVisibleLimit + 6, matchingCount);
+            applyFilters();
+        });
+
         $('#globalSearch').addEventListener('input', applyFilters);
+        applyFilters();
         $('#statusFilters').addEventListener('click', e => {
             const tab = e.target.closest('.filter-tab');
             if (!tab) return;

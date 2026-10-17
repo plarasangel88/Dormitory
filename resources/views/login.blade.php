@@ -380,6 +380,7 @@
             .panel { min-width: 0; padding: 32px 24px 48px; }
         }
     </style>
+    @include('auth.partials.theme')
 </head>
 <body>
 
@@ -472,12 +473,18 @@
     </div>
 @endif
 
+            @if ($errors->any() && !$errors->has('login'))
+                <div class="alert-error" role="alert">
+                    <span>{{ $errors->first() }}</span>
+                </div>
+            @endif
+
 
             <form action="/login" method="POST">
                 @csrf
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" value="{{ old('username') }}" autocomplete="username" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
@@ -494,7 +501,7 @@
 
                 <div class="form-meta-row">
                     <div class="remember-me">
-                        <input type="checkbox" id="remember" name="remember">
+                        <input type="checkbox" id="remember" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
                         <label for="remember">Remember me</label>
                     </div>
                     <a href="{{ route('password.request') }}" class="forgot-link">Forgot password?</a>

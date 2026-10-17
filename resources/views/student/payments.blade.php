@@ -430,6 +430,10 @@
             color: var(--navy-deep);
         }
         .ref-cell { color: var(--text-secondary); }
+        [hidden] { display: none !important; }
+        .history-more-wrap { padding: 0 18px 18px; text-align: center; }
+        .history-more-button { padding: 9px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff; color: var(--navy-deep); font: 600 12px 'Inter', sans-serif; cursor: pointer; }
+        .history-more-button:hover { background: var(--paper); border-color: var(--amber); }
 
         .badge {
             display: inline-block;
@@ -480,27 +484,20 @@
         <!-- Main Workspace -->
         <main class="main-content">
             <!-- Header Bar (same skin as Student Dashboard) -->
-            <header class="top-header">
-                <button class="student-menu-toggle" type="button" data-student-sidebar-toggle aria-label="Open navigation"><i class="fa-solid fa-bars"></i></button>
-                <div class="search-bar">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Search...">
-                </div>
-                @include('student.partials.announcement-bell')
-                <div class="admin-profile-badge">
-                    <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
-                    <div class="user-info">
-                        <span class="user-name">{{ auth()->user()->name }}</span>
-                        <span class="user-role">{{ strtoupper(auth()->user()->role) }}</span>
-                    </div>
-                </div>
-            </header>
+            @include('student.partials.page-header', ['title' => 'Payments', 'subtitle' => 'Review your payment status and dormitory dues.'])
 
             <!-- Dashboard Content -->
             <div class="dashboard-body">
                 <div class="welcome-banner">
-                    <h1>Payments</h1>
-                    <p>Hi {{ auth()->user()->name }}, submit a payment and track your dormitory dues.</p>
+                    <div class="welcome-content">
+                        <div class="eyebrow">Your Dormitory, Your Space</div>
+                        <h1>Payments</h1>
+                        <p>Hi {{ auth()->user()->name }}, submit a payment and track your dormitory dues.</p>
+                    </div>
+                    <div class="welcome-date">
+                        <span><i class="fa-regular fa-calendar"></i> Today's Date</span>
+                        <strong>{{ now()->format('F d, Y') }}</strong>
+                    </div>
                 </div>
 
                 @if(session('success'))
@@ -577,7 +574,7 @@
 
                 <div class="payments-layout">
                     <div class="card-panel">
-                        <h3><i class="fa-solid fa-money-bill-transfer"></i> Submit a Payment</h3>
+                        <h3><i class="fa-solid fa-money-bill-transfer"></i> Pay All Outstanding Dues</h3>
                         <form action="{{ route('payments.store') }}" method="POST">
                             @csrf
 
@@ -588,33 +585,9 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="amount">Amount (₱)</label>
-                                <input type="number" id="amount" name="amount" step="0.01" min="1" placeholder="e.g. 3500.00" value="{{ old('amount') }}" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="bill_id">Bill to pay (optional)</label>
-                                <select id="bill_id" name="bill_id">
-                                    <option value="">General payment (not linked to a bill)</option>
-                                    @foreach($bills as $bill)
-                                        @if($bill->balance > 0)
-                                            <option value="{{ $bill->id }}" {{ old('bill_id') == $bill->id ? 'selected' : '' }}>
-                                                {{ $bill->billing_month->format('F Y') }} · Balance ₱{{ number_format($bill->balance, 2) }}
-                                            </option>
-                                        @endif
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="applies_to">Apply to</label>
-                                <select id="applies_to" name="applies_to">
-                                    <option value="">Choose a bill item</option>
-                                    @foreach($billItems as $item)
-                                        <option value="{{ $item }}" {{ old('applies_to') === $item ? 'selected' : '' }}>{{ ucfirst($item) }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="form-hint">Choose a bill and item to have a verified payment reduce that balance. You can also submit an unallocated general payment.</div>
+                                <label for="amount">Total dues to pay (&#8369;)</label>
+                                <input type="text" id="amount" value="&#8369;{{ number_format($payableTotal, 2) }}" readonly>
+                                <div class="form-hint">This combines every unpaid bill item. Amounts already submitted and awaiting review are excluded.</div>
                             </div>
 
                             <div class="form-group">
@@ -622,15 +595,18 @@
                                 <select id="method" name="method" required>
                                     <option value="" disabled {{ old('method') ? '' : 'selected' }}>Select method</option>
                                     <option value="GCash" {{ old('method') == 'GCash' ? 'selected' : '' }}>GCash</option>
-                                    <option value="Bank Transfer" {{ old('method') == 'Bank Transfer' ? 'selected' : '' }}>Bank Transfer</option>
                                     <option value="Cash" {{ old('method') == 'Cash' ? 'selected' : '' }}>Cash</option>
                                 </select>
                             </div>
 
-                            <div class="form-group">
-                                <label for="reference_number">Reference Number</label>
-                                <input type="text" id="reference_number" name="reference_number" placeholder="e.g. GC1234567890" value="{{ old('reference_number') }}" required>
-                                <div class="form-hint">Found in your GCash/bank transaction receipt.</div>
+                            <div class="form-group" id="gcashQrPanel" style="display:none">
+                                <label>Pay using the dormitory GCash QR</label>
+                                @if ($gcashQrUrl)
+                                    <img src="{{ $gcashQrUrl }}" alt="Dormitory GCash QR code" style="display:block;max-width:240px;width:100%;height:auto;margin:12px auto;border:1px solid #E3DFD5;border-radius:12px;padding:10px;background:#fff">
+                                    <div class="form-hint">Scan this code in GCash and pay the amount shown above. The portal will create a transaction reference for your submission. It stays pending until an admin verifies the transfer in GCash.</div>
+                                @else
+                                    <div class="form-hint">The administrator has not uploaded a GCash QR code yet. Select Cash or contact the dormitory office.</div>
+                                @endif
                             </div>
 
                             <div class="form-group">
@@ -638,7 +614,7 @@
                                 <textarea id="notes" name="notes" placeholder="e.g. Payment for September rent">{{ old('notes') }}</textarea>
                             </div>
 
-                            <button type="submit" class="btn-submit">Submit Payment</button>
+                            <button type="submit" class="btn-submit" {{ $payableTotal <= 0 ? 'disabled' : '' }}>{{ $payableTotal > 0 ? 'Submit Payment for Verification' : 'No Dues Available to Pay' }}</button>
                         </form>
                     </div>
 
@@ -655,13 +631,19 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($payments as $payment)
-                                    <tr>
+                                @forelse($transactions as $transactionIndex => $payment)
+                                    <tr data-transaction-index="{{ $transactionIndex }}" @if($transactionIndex >= 6) hidden @endif>
                                         <td>{{ $payment->created_at->format('M d, Y') }}</td>
-                                        <td class="amount-cell">₱{{ number_format($payment->amount, 2) }}</td>
+                                        <td class="amount-cell">₱{{ number_format($payment->transaction_total, 2) }}</td>
                                         <td>{{ $payment->method }}</td>
                                         <td class="ref-cell">{{ $payment->reference_number }}</td>
-                                        <td><span class="badge badge-{{ $payment->status }}">{{ $payment->status }}</span></td>
+                                        <td>
+                                            <span class="badge badge-{{ $payment->transaction_status }}">{{ $payment->transaction_status }}</span>
+                                            @if ($payment->provider_reference)<div class="form-hint">Provider ref: {{ $payment->provider_reference }}</div>@endif
+                                            @if ($payment->transaction_status === 'verified')
+                                                <a href="{{ route('payments.receipt', ['reference' => $payment->reference_number]) }}" target="_blank" rel="noopener">Print receipt</a>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr class="empty-row">
@@ -670,11 +652,54 @@
                                 @endforelse
                             </tbody>
                         </table>
+                        @if ($transactions->count() > 6)
+                            <div class="history-more-wrap">
+                                <button type="button" class="history-more-button" id="historyMoreButton">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+                                    Show older transactions ({{ $transactions->count() - 6 }} more)
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
         </main>
     </div>
     @include('student.partials.announcement-bell-script')
+    <script>
+        (() => {
+            const method = document.getElementById('method');
+            const qrPanel = document.getElementById('gcashQrPanel');
+            const updatePaymentOptions = () => {
+                const selected = method.value;
+                qrPanel.style.display = selected === 'GCash' ? 'block' : 'none';
+            };
+            method.addEventListener('change', updatePaymentOptions);
+            updatePaymentOptions();
+
+            const moreButton = document.getElementById('historyMoreButton');
+            if (moreButton) {
+                const rows = [...document.querySelectorAll('[data-transaction-index]')];
+                const pageSize = 6;
+                let visibleCount = Math.min(pageSize, rows.length);
+
+                moreButton.addEventListener('click', () => {
+                    if (visibleCount >= rows.length) {
+                        visibleCount = Math.min(pageSize, rows.length);
+                    } else {
+                        visibleCount = Math.min(visibleCount + pageSize, rows.length);
+                    }
+
+                    rows.forEach((row, index) => { row.hidden = index >= visibleCount; });
+
+                    if (visibleCount >= rows.length) {
+                        moreButton.innerHTML = '<i class="fa-solid fa-chevron-up"></i> Show fewer transactions';
+                    } else {
+                        moreButton.innerHTML = '<i class="fa-solid fa-clock-rotate-left"></i> Show older transactions (' + (rows.length - visibleCount) + ' more)';
+                    }
+                });
+            }
+        })();
+    </script>
 </body>
 </html>

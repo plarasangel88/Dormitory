@@ -25,10 +25,12 @@ class ProfileController extends Controller
             'course' => [
                 'required',
                 Rule::in([
-                    'BS Information Technology',
-                    'BS Computer Science',
-                    'BS Information Systems',
-                    'BS Business Administration'
+                    'Information Technology',
+                    'Education',
+                    'Criminology',
+                    'Office Administration',
+                    'Political Science',
+                    'Communication',
                 ])
             ],
         ]);

@@ -56,7 +56,6 @@ class MaintenanceController extends Controller
     {
         $validated = $request->validate([
             'category'    => ['required', 'string', 'max:100'],
-            'title'       => ['required', 'string', 'max:150'],
             'description' => ['required', 'string', 'max:2000'],
             'priority'    => ['required', 'in:low,medium,high'],
         ]);
@@ -66,12 +65,12 @@ class MaintenanceController extends Controller
             return back()->withErrors(['room' => 'You need an assigned room before submitting a maintenance request.'])->withInput();
         }
 
-        // The current schema has no category column, so retain the chosen category in the title.
-        $validated['title'] = '[' . $validated['category'] . '] ' . $validated['title'];
+        // The schema stores the category in the title column; students do not enter a separate title.
+        $requestLabel = '[' . $validated['category'] . ']';
 
         MaintenanceRequest::create([
             'user_id'     => auth()->id(),
-            'title'       => $validated['title'],
+            'title'       => $requestLabel,
             'room_id'     => $user->room_id,
             'description' => $validated['description'],
             'priority'    => $validated['priority'],
