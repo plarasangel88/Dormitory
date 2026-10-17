@@ -22,6 +22,8 @@ class ProfileController extends Controller
             'name'   => 'required|string|max:255',
             'email'  => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
             'contact_number' => ['nullable', 'string', 'max:30'],
+            'emergency_contact_number' => ['nullable', 'string', 'max:30'],
+            'residency_place' => ['nullable', 'string', 'max:255'],
             'course' => [
                 'required',
                 Rule::in([

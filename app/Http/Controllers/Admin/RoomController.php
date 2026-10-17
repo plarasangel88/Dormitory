@@ -10,7 +10,7 @@ class RoomController extends Controller
 {
     public function show(Room $room)
     {
-        $room->load(['students:id,room_id,name,email,course,contact_number,status']);
+        $room->load(['students:id,room_id,name,email,course,contact_number,emergency_contact_number,residency_place,status']);
 
         return view('admin.room-show', compact('room'));
     }

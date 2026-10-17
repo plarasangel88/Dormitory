@@ -34,6 +34,8 @@ class User extends Authenticatable
         'role',
         'room_id',
         'contact_number',
+        'emergency_contact_number',
+        'residency_place',
         'status',
     ];
 

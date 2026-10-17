@@ -888,6 +888,14 @@
                                                     <span class="detail-value">{{ $student->contact_number ?? '—' }}</span>
                                                 </div>
                                                 <div class="detail-row">
+                                                    <span class="detail-label"><i class="fa-solid fa-phone-volume"></i> Emergency Contact</span>
+                                                    <span class="detail-value">{{ $student->emergency_contact_number ?: '—' }}</span>
+                                                </div>
+                                                <div class="detail-row">
+                                                    <span class="detail-label"><i class="fa-solid fa-house"></i> Residency Place</span>
+                                                    <span class="detail-value">{{ $student->residency_place ?: '—' }}</span>
+                                                </div>
+                                                <div class="detail-row">
                                                     <span class="detail-label"><i class="fa-solid fa-graduation-cap"></i> Course</span>
                                                     <span class="detail-value">{{ $student->course ?: '—' }}</span>
                                                 </div>

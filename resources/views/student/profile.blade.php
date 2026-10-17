@@ -486,6 +486,16 @@
                     <input type="text" id="contact_number" name="contact_number" value="{{ old('contact_number', auth()->user()->contact_number) }}" placeholder="e.g. 0917 123 4567">
                 </div>
 
+                <div class="form-group">
+                    <label for="emergency_contact_number">Emergency Contact Number</label>
+                    <input type="tel" id="emergency_contact_number" name="emergency_contact_number" value="{{ old('emergency_contact_number', auth()->user()->emergency_contact_number) }}" placeholder="e.g. 0917 123 4567" maxlength="30">
+                </div>
+
+                <div class="form-group">
+                    <label for="residency_place">Residency Place</label>
+                    <input type="text" id="residency_place" name="residency_place" value="{{ old('residency_place', auth()->user()->residency_place) }}" placeholder="City, municipality, or home address" maxlength="255">
+                </div>
+
                 <button type="submit" class="btn-save">Save Changes</button>
             </form>
         </div>

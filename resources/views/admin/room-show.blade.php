@@ -78,7 +78,7 @@
                     @if ($room->students->isNotEmpty())
                         <div class="table-responsive">
                             <table class="tenant-table">
-                                <thead><tr><th>Tenant</th><th>Course</th><th>Email</th><th>Contact number</th><th>Status</th></tr></thead>
+                                <thead><tr><th>Tenant</th><th>Course</th><th>Email</th><th>Contact number</th><th>Emergency contact</th><th>Residency place</th><th>Status</th></tr></thead>
                                 <tbody>
                                     @foreach ($room->students as $tenant)
                                         <tr>
@@ -86,6 +86,8 @@
                                             <td>{{ $tenant->course ?: '—' }}</td>
                                             <td>{{ $tenant->email ?: '—' }}</td>
                                             <td>{{ $tenant->contact_number ?: '—' }}</td>
+                                            <td>{{ $tenant->emergency_contact_number ?: '—' }}</td>
+                                            <td>{{ $tenant->residency_place ?: '—' }}</td>
                                             <td><span class="status-pill">{{ $tenant->status ?: 'active' }}</span></td>
                                         </tr>
                                     @endforeach

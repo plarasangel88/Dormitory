@@ -23,6 +23,8 @@ class Student extends Authenticatable
         'name',
         'email',
         'contact_number',
+        'emergency_contact_number',
+        'residency_place',
         'room_id',
         'status',
         'password',
