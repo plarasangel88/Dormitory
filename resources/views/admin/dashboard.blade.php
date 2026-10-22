@@ -380,6 +380,9 @@
                 <a href="{{ route('admin.dashboard') }}" class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fa-solid fa-house"></i> Dashboard
                 </a>
+                <a href="{{ route('admin.announcements.index') }}" class="menu-item {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-bullhorn"></i> Announcements
+                </a>
                 <a href="{{ route('admin.students.index') }}" class="menu-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-user-graduate"></i> Students
                 </a>
@@ -412,9 +415,11 @@
                 <!-- Search: filters the payment table live; Enter searches the Students page -->
                 <form class="search-bar" method="GET" action="{{ route('admin.students.index') }}" role="search">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" name="search" id="globalSearch" placeholder="Search student name, room #, or ID..." autocomplete="off">
+                    <input type="text" name="search" id="globalSearch" placeholder="Search student name, room #, or ID..." aria-label="Search students" autocomplete="off">
                     <button type="submit" aria-label="Search"><i class="fa-solid fa-arrow-right"></i></button>
                 </form>
+
+                @include('admin.partials.notification-bell')
 
                 @if ($profileUrl)
                     <a href="{{ $profileUrl }}" class="admin-profile-badge" title="My profile">
@@ -500,53 +505,15 @@
                                 <a href="{{ route('admin.payments.index') }}" class="action-btn">
                                     <i class="fa-solid fa-wallet"></i> Manage Payments &amp; Billing
                                 </a>
+                                <a href="{{ route('admin.announcements.index') }}" class="action-btn">
+                                    <i class="fa-solid fa-bullhorn"></i> Announcements
+                                </a>
+                                <a href="{{ route('admin.reports.index') }}" class="action-btn">
+                                    <i class="fa-solid fa-chart-column"></i> Reports &amp; Exports
+                                </a>
                             </div>
                         </div>
 
-                        <!-- Announcements (admin posts, students see on their dashboard) -->
-                        <div class="card-panel margin-top">
-                            <div class="panel-header">
-                                <h3><i class="fa-solid fa-bullhorn"></i> Announcements</h3>
-                                <button type="button" class="live-badge" id="liveBadge" data-action="toggle-live" title="Click to pause / resume auto-refresh">
-                                    <span class="dot"></span> <span id="liveLabel">Live Updates</span>
-                                </button>
-                            </div>
-
-                            <form class="announce-form" id="announceForm">
-                                <input type="text" name="title" placeholder="Announcement title" maxlength="150" required>
-                                <textarea name="body" placeholder="Write your message to the students..." maxlength="2000" required></textarea>
-                                <div class="announce-row">
-                                    <label class="pin-check">
-                                        <input type="checkbox" name="is_pinned" value="1"> Pin to top
-                                    </label>
-                                    <button type="submit" class="post-btn">
-                                        <i class="fa-solid fa-paper-plane"></i> Post
-                                    </button>
-                                </div>
-                            </form>
-
-                            <ul class="activity-feed" id="activityFeed">
-                                @forelse ($announcements ?? [] as $a)
-                                    <li class="feed-item announce-item">
-                                        <span class="feed-icon {{ $a->is_pinned ? 'orange' : 'blue' }}">
-                                            <i class="fa-solid {{ $a->is_pinned ? 'fa-thumbtack' : 'fa-bullhorn' }}"></i>
-                                        </span>
-                                        <div class="feed-content">
-                                            <p><strong>{{ $a->title }}</strong></p>
-                                            <p>{!! nl2br(e($a->body)) !!}</p>
-                                            <small>{{ $a->author->name ?? 'Admin' }} · {{ $a->created_at->diffForHumans() }}</small>
-                                        </div>
-                                        <button type="button" class="table-btn secondary" data-action="delete-announcement" data-id="{{ $a->id }}" title="Delete announcement">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </li>
-                                @empty
-                                    <li class="feed-item">
-                                        <div class="feed-content"><p>No announcements yet.</p></div>
-                                    </li>
-                                @endforelse
-                            </ul>
-                        </div>
                     </div>
 
                     <!-- Right -->
@@ -747,42 +714,6 @@
             }
         }
 
-        /* ---------- Announcements ---------- */
-        $('#announceForm').addEventListener('submit', async e => {
-            e.preventDefault();
-            const form = e.target;
-            const btn = $('.post-btn', form);
-            btn.disabled = true;
-            try {
-                const data = await post('{{ route('admin.announcements.store') }}', {
-                    title: form.title.value.trim(),
-                    body: form.body.value.trim(),
-                    is_pinned: form.is_pinned.checked ? 1 : 0
-                });
-                toast(data.message || 'Announcement posted.', 'success');
-                form.reset();
-                refreshDashboard();
-            } catch (err) {
-                toast(err.message, 'error');
-            } finally {
-                btn.disabled = false;
-            }
-        });
-
-        async function deleteAnnouncement(btn) {
-            if (!confirm('Delete this announcement? Students will no longer see it.')) return;
-            btn.disabled = true;
-            try {
-                const deleteUrl = @json(route('admin.announcements.destroy', ['announcement' => '__ANNOUNCEMENT_ID__']));
-                const data = await post(deleteUrl.replace('__ANNOUNCEMENT_ID__', encodeURIComponent(btn.dataset.id)));
-                toast(data.message || 'Announcement deleted.', 'success');
-                refreshDashboard();
-            } catch (err) {
-                toast(err.message, 'error');
-                btn.disabled = false;
-            }
-        }
-
         /* ---------- Filters + live search for payment table ---------- */
         let statusFilter = 'all';
         let paymentVisibleLimit = 6;
@@ -836,7 +767,7 @@
         });
 
         /* ---------- Live refresh (no extra endpoint needed) ---------- */
-        let live = true, timer = null, refreshing = false;
+        let timer = null, refreshing = false;
 
         async function refreshDashboard(manual) {
             if (refreshing) return;
@@ -845,7 +776,7 @@
                 const res = await fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
                 if (!res.ok) throw new Error();
                 const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
-                ['#metricsGrid', '#activityFeed', '#paymentBody'].forEach(sel => {
+                ['#metricsGrid', '#paymentBody'].forEach(sel => {
                     const fresh = $(sel, doc), cur = $(sel);
                     if (fresh && cur) cur.innerHTML = fresh.innerHTML;
                 });
@@ -858,13 +789,6 @@
 
         function startLive() { clearInterval(timer); timer = setInterval(() => { if (!document.hidden) refreshDashboard(); }, 30000); }
 
-        function toggleLive() {
-            live = !live;
-            $('#liveBadge').classList.toggle('paused', !live);
-            $('#liveLabel').textContent = live ? 'Live Updates' : 'Paused';
-            if (live) { startLive(); refreshDashboard(true); } else { clearInterval(timer); toast('Auto-refresh paused.'); }
-        }
-
         startLive();
 
         /* ---------- Delegated clicks ---------- */
@@ -875,9 +799,7 @@
                     case 'scan': openScanner(actionEl.dataset.id); break;
                     case 'close-scanner': closeScanner(); break;
                     case 'remind': sendReminder(actionEl); break;
-                    case 'toggle-live': toggleLive(); break;
                     case 'toggle-sidebar': document.body.classList.toggle('sidebar-open'); break;
-                    case 'delete-announcement': deleteAnnouncement(actionEl); break;
                 }
                 return;
             }

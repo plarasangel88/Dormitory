@@ -21,7 +21,7 @@ class LoginController extends Controller
         ]);
 
         // Try to log in
-        if (!Auth::attempt([
+        if (! Auth::attempt([
             'username' => $credentials['username'],
             'password' => $credentials['password'],
         ], $request->boolean('remember'))) {
@@ -45,6 +45,6 @@ class LoginController extends Controller
         }
 
         // STUDENT
-        return redirect()->intended('/dashboard');
+        return redirect()->route('dashboard');
     }
 }

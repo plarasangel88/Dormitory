@@ -467,6 +467,8 @@
         }
 
         .icon-btn:hover { background-color: var(--navy-deep); color: #FFF; border-color: var(--navy-deep); }
+        .message-action { gap: 7px; white-space: nowrap; }
+        .message-action-count { display: inline-grid; place-items: center; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 999px; background: #e8edf5; color: var(--navy-deep); font-size: 10px; font-weight: 700; }
 
         .empty-state {
             text-align: center;
@@ -496,7 +498,7 @@
             background: var(--paper);
             border-radius: 16px;
             width: 100%;
-            max-width: 480px;
+            max-width: 620px;
             max-height: 90vh;
             overflow-y: auto;
             border: 1px solid var(--border-color);
@@ -570,6 +572,19 @@
 
         .form-control:focus, .form-select:focus { border-color: var(--amber); }
 
+        .conversation-panel { padding: 0 24px 20px; }
+        .conversation-panel h4 { margin: 0 0 10px; color: var(--navy-deep); font-size: 0.9rem; }
+        .message-thread { display: grid; gap: 9px; max-height: 230px; overflow-y: auto; padding: 11px; border: 1px solid var(--border-color); border-radius: 10px; background: #f8f9fb; }
+        .maintenance-message { max-width: 88%; padding: 9px 11px; border: 1px solid var(--border-color); border-radius: 10px; background: #fff; }
+        .maintenance-message.is-mine { justify-self: end; border-color: #d8e3f1; background: #edf3fb; }
+        .maintenance-message-meta { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 4px; color: var(--text-secondary); font-size: 10px; }
+        .maintenance-message-body { margin: 0; color: var(--text-primary); font-size: 0.78rem; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-wrap; }
+        .message-empty { margin: 0; color: var(--text-secondary); font-size: 0.8rem; text-align: center; }
+        .message-form { display: grid; gap: 8px; margin-top: 10px; }
+        .message-form textarea { width: 100%; min-height: 68px; padding: 9px 11px; resize: vertical; border: 1px solid var(--border-color); border-radius: 8px; font: inherit; }
+        .message-form .btn-save { justify-self: end; }
+        .message-error { margin: 0; color: var(--danger-red); font-size: 0.72rem; }
+
         .field-error { color: var(--danger-red); font-size: 0.72rem; margin-top: 5px; }
 
         .modal-footer {
@@ -635,6 +650,9 @@
                 <a href="{{ route('admin.dashboard') }}" class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fa-solid fa-house"></i> Dashboard
                 </a>
+                <a href="{{ route('admin.announcements.index') }}" class="menu-item {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-bullhorn"></i> Announcements
+                </a>
                 <a href="{{ route('admin.students.index') }}" class="menu-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-user-graduate"></i> Students
                 </a>
@@ -661,10 +679,12 @@
             <!-- Header Bar -->
             <header class="top-header">
                 <div class="admin-page-heading"><strong>Maintenance</strong><small>Review and manage student requests</small></div>
-                <form method="GET" class="search-bar">
+                <form method="GET" class="search-bar" role="search">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by student or room...">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by student or room..." aria-label="Search maintenance requests">
+                    <button type="submit" aria-label="Search maintenance requests"><i class="fa-solid fa-arrow-right"></i></button>
                 </form>
+                @include('admin.partials.notification-bell')
                 <div class="admin-profile-badge">
                     <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                     <div class="user-info">
@@ -772,8 +792,8 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <button type="button" class="icon-btn" title="Update" onclick="openModal('maintenanceModal{{ $request->id }}')">
-                                                <i class="fa-solid fa-pen"></i>
+                                            <button type="button" class="icon-btn message-action" title="Open request and messages" onclick="openModal('maintenanceModal{{ $request->id }}')">
+                                                <i class="fa-solid fa-comments" aria-hidden="true"></i> Messages <span class="message-action-count">{{ $request->messages_count }}</span>
                                             </button>
                                         </td>
                                     </tr>
@@ -792,7 +812,9 @@
                                                     <div class="req-description-view">
                                                         <strong>{{ $request->user->name ?? 'Unknown Student' }}</strong> &middot; Room {{ $request->room->room_number ?? 'N/A' }}<br>
                                                         Category: {{ \Illuminate\Support\Str::startsWith($request->title ?? '', '[') ? \Illuminate\Support\Str::before(\Illuminate\Support\Str::after($request->title, '['), ']') : 'Other' }}<br>
-                                                        {{ $request->description }}
+                                                        {{ $request->description }}<br>
+                                                        Assigned to: {{ $request->assignee->name ?? 'Unassigned' }}<br>
+                                                        Target date: {{ $request->due_at?->format('M d, Y g:i A') ?? 'Not set' }}
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Status</label>
@@ -804,6 +826,19 @@
                                                         </select>
                                                     </div>
                                                     <div class="form-group">
+                                                        <label class="form-label">Assigned administrator</label>
+                                                        <select name="assigned_to" class="form-select">
+                                                            <option value="">Unassigned</option>
+                                                            @foreach ($admins as $admin)
+                                                                <option value="{{ $admin->id }}" {{ (int) $request->assigned_to === (int) $admin->id ? 'selected' : '' }}>{{ $admin->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="form-label">Target date</label>
+                                                        <input type="datetime-local" name="due_at" class="form-control" value="{{ $request->due_at?->format('Y-m-d\\TH:i') }}">
+                                                    </div>
+                                                    <div class="form-group">
                                                         <label class="form-label">Admin Notes</label>
                                                         <textarea name="admin_notes" class="form-control" rows="3" placeholder="Add notes for the student...">{{ old('admin_notes', $request->admin_notes) }}</textarea>
                                                     </div>
@@ -813,6 +848,31 @@
                                                     <button type="submit" class="btn-save">Save Changes</button>
                                                 </div>
                                             </form>
+                                            <section class="conversation-panel" aria-label="Conversation with {{ $request->user->name ?? 'student' }}">
+                                                <h4>Conversation with {{ $request->user->name ?? 'the student' }}</h4>
+                                                <div class="message-thread" aria-live="polite">
+                                                    @forelse ($request->messages as $message)
+                                                        <article class="maintenance-message {{ (int) $message->user_id === (int) auth()->id() ? 'is-mine' : '' }}">
+                                                            <div class="maintenance-message-meta">
+                                                                <strong>{{ (int) $message->user_id === (int) auth()->id() ? 'You' : ($message->user->name ?? 'Dorm Portal User') }}</strong>
+                                                                <time datetime="{{ $message->created_at->toIso8601String() }}">{{ $message->created_at->format('M d, g:i A') }}</time>
+                                                            </div>
+                                                            <p class="maintenance-message-body">{{ $message->body }}</p>
+                                                        </article>
+                                                    @empty
+                                                        <p class="message-empty">No messages yet. Start the conversation with the student.</p>
+                                                    @endforelse
+                                                </div>
+                                                <form class="message-form" action="{{ route('maintenance.messages.store', $request) }}" method="POST">
+                                                    @csrf
+                                                    <input type="hidden" name="maintenance_request_id" value="{{ $request->id }}">
+                                                    <textarea name="body" maxlength="2000" required aria-label="Message to student" placeholder="Write a message to the student...">{{ (int) old('maintenance_request_id') === (int) $request->id ? old('body') : '' }}</textarea>
+                                                    @if ((int) old('maintenance_request_id') === (int) $request->id)
+                                                        @error('body') <p class="message-error">{{ $message }}</p> @enderror
+                                                    @endif
+                                                    <button type="submit" class="btn-save"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send Message</button>
+                                                </form>
+                                            </section>
                                         </div>
                                     </div>
                                 @empty
@@ -836,14 +896,24 @@
 
     <script>
         function openModal(id) {
-            document.getElementById(id).classList.add('open');
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.add('open');
+            const url = new URL(window.location.href);
+            url.searchParams.set('open', id.replace('maintenanceModal', ''));
+            window.history.replaceState({}, '', url);
         }
         function closeModal(id) {
-            document.getElementById(id).classList.remove('open');
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('open');
+            const url = new URL(window.location.href);
+            url.searchParams.delete('open');
+            window.history.replaceState({}, '', url);
         }
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) overlay.classList.remove('open');
+                if (e.target === overlay) closeModal(overlay.id);
             });
         });
         const requestToOpen = new URLSearchParams(window.location.search).get('open');

@@ -266,25 +266,26 @@
         /* Metrics grid — identical to Student Dashboard */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 28px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
         }
 
         .metric-card {
             background: var(--card-bg);
-            padding: 20px;
+            min-width: 0;
+            padding: 14px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
             box-shadow: 0 1px 2px rgba(22, 33, 62, 0.04);
         }
 
         .metric-icon {
-            width: 48px;
-            height: 48px;
+            width: 42px;
+            height: 42px;
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -299,18 +300,23 @@
         .metric-icon.purple { background-color: #EBE7F4; color: var(--purple-accent); }
 
         .metric-title {
-            font-size: 0.68rem;
+            display: block;
+            font-size: 0.64rem;
             font-weight: 700;
             color: var(--text-secondary);
-            letter-spacing: 0.6px;
+            letter-spacing: 0.45px;
+            line-height: 1.35;
         }
 
+        .metric-info { min-width: 0; }
         .metric-value {
             font-family: 'Fraunces', serif;
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 600;
             color: var(--text-primary);
             margin-top: 4px;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
         }
 
         /* Card panel — identical to Student Dashboard's Quick Actions panel */
@@ -402,8 +408,15 @@
 
         /* ---------- History table ---------- */
         .history-card { padding: 0; overflow: hidden; }
-        .history-card h3 { padding: 20px 20px 0; margin-bottom: 12px; }
+        .history-card h3 { padding: 16px 16px 0; margin-bottom: 10px; font-size: 1rem; }
         table { width: 100%; border-collapse: collapse; }
+        .payment-history-table { width: 100%; table-layout: fixed; }
+        .payment-history-table th:nth-child(1) { width: 11%; }
+        .payment-history-table th:nth-child(2) { width: 14%; text-align: right; }
+        .payment-history-table th:nth-child(3) { width: 10%; text-align: center; }
+        .payment-history-table th:nth-child(4) { width: 23%; }
+        .payment-history-table th:nth-child(5) { width: 18%; text-align: center; }
+        .payment-history-table th:nth-child(6) { width: 24%; text-align: center; }
         thead { background-color: var(--paper); }
         th {
             text-align: left;
@@ -421,18 +434,44 @@
             color: var(--text-primary);
             border-bottom: 1px solid var(--border-color);
         }
+        .payment-history-table th { padding: 8px 6px; font-size: 9px; }
+        .payment-history-table td { padding: 8px 6px; font-size: 10px; vertical-align: middle; }
         tbody tr:last-child td { border-bottom: none; }
         tbody tr:hover { background-color: var(--paper); }
         .amount-cell {
             font-family: 'Fraunces', serif;
             font-weight: 500;
-            font-size: 14.5px;
+            font-size: 12px;
             color: var(--navy-deep);
+            text-align: right;
         }
-        .ref-cell { color: var(--text-secondary); }
+        .ref-cell { color: var(--text-secondary); font-size: 10px; line-height: 1.35; overflow-wrap: anywhere; }
+        .payment-history-table .method-cell,
+        .payment-history-table .status-cell,
+        .payment-history-table .receipt-cell { text-align: center; }
+        .payment-history-table .form-hint { margin-top: 3px; font-size: 9px; line-height: 1.3; }
+        .receipt-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 100%;
+            max-width: 104px;
+            min-height: 28px;
+            padding: 4px 5px;
+            border: 1px solid var(--navy-deep);
+            border-radius: 7px;
+            background: var(--navy-deep);
+            color: #fff;
+            font: 600 8px 'Inter', sans-serif;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background-color .15s ease, border-color .15s ease;
+        }
+        .receipt-button:hover { background: var(--navy-mid); border-color: var(--navy-mid); }
         [hidden] { display: none !important; }
-        .history-more-wrap { padding: 0 18px 18px; text-align: center; }
-        .history-more-button { padding: 9px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: #fff; color: var(--navy-deep); font: 600 12px 'Inter', sans-serif; cursor: pointer; }
+        .history-more-wrap { padding: 0 14px 14px; text-align: center; }
+        .history-more-button { padding: 7px 11px; border: 1px solid var(--border-color); border-radius: 7px; background: #fff; color: var(--navy-deep); font: 600 10px 'Inter', sans-serif; cursor: pointer; }
         .history-more-button:hover { background: var(--paper); border-color: var(--amber); }
 
         .badge {
@@ -457,6 +496,7 @@
 
         @media (max-width: 1080px) {
             .payments-layout { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
         @media (max-width: 860px) {
             .app-container { flex-direction: column; }
@@ -472,6 +512,9 @@
             .sidebar-footer { padding-top: 0; border-top: none; margin-left: 12px; }
             .search-bar { width: 220px; }
             .history-card { overflow-x: auto; }
+        }
+        @media (max-width: 520px) {
+            .metrics-grid { grid-template-columns: 1fr; }
         }
     </style>
     @include('student.partials.theme')
@@ -513,6 +556,8 @@
                         </ul>
                     </div>
                 @endif
+
+                @include('student.partials.payment-reminders')
 
                 <!-- Summary metrics -->
                 <section class="metrics-grid">
@@ -620,7 +665,7 @@
 
                     <div class="card-panel history-card">
                         <h3><i class="fa-solid fa-clock-rotate-left"></i> Payment History</h3>
-                        <table>
+                        <table class="payment-history-table">
                             <thead>
                                 <tr>
                                     <th>Date</th>
@@ -628,6 +673,7 @@
                                     <th>Method</th>
                                     <th>Reference No.</th>
                                     <th>Status</th>
+                                    <th>Receipt</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -635,19 +681,23 @@
                                     <tr data-transaction-index="{{ $transactionIndex }}" @if($transactionIndex >= 6) hidden @endif>
                                         <td>{{ $payment->created_at->format('M d, Y') }}</td>
                                         <td class="amount-cell">₱{{ number_format($payment->transaction_total, 2) }}</td>
-                                        <td>{{ $payment->method }}</td>
+                                        <td class="method-cell">{{ $payment->method }}</td>
                                         <td class="ref-cell">{{ $payment->reference_number }}</td>
-                                        <td>
+                                        <td class="status-cell">
                                             <span class="badge badge-{{ $payment->transaction_status }}">{{ $payment->transaction_status }}</span>
                                             @if ($payment->provider_reference)<div class="form-hint">Provider ref: {{ $payment->provider_reference }}</div>@endif
+                                        </td>
+                                        <td class="receipt-cell">
                                             @if ($payment->transaction_status === 'verified')
-                                                <a href="{{ route('payments.receipt', ['reference' => $payment->reference_number]) }}" target="_blank" rel="noopener">Print receipt</a>
+                                                <a class="receipt-button" href="{{ route('payments.receipt', ['reference' => $payment->reference_number]) }}" target="_blank" rel="noopener">
+                                                    <i class="fa-solid fa-print" aria-hidden="true"></i> Print receipt
+                                                </a>
                                             @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr class="empty-row">
-                                        <td colspan="5">No payments yet. Submit one using the form to start your record.</td>
+                                        <td colspan="6">No payments yet. Submit one using the form to start your record.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

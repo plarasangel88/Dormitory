@@ -386,6 +386,7 @@
 
         .status-pill.available { background-color: #E1EFE6; color: #327049; }
         .status-pill.occupied { background-color: #FBEBD4; color: #A9721F; }
+        .status-pill.full { background-color: #F6E2DD; color: #A8412B; }
         .status-pill.maintenance { background-color: #F6E2DD; color: #A8412B; }
 
         .icon-btn {
@@ -561,6 +562,9 @@
                 <a href="{{ route('admin.dashboard') }}" class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fa-solid fa-house"></i> Dashboard
                 </a>
+                <a href="{{ route('admin.announcements.index') }}" class="menu-item {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-bullhorn"></i> Announcements
+                </a>
                 <a href="{{ route('admin.students.index') }}" class="menu-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-user-graduate"></i> Students
                 </a>
@@ -587,10 +591,12 @@
             <!-- Header Bar -->
             <header class="top-header">
                 <div class="admin-page-heading"><strong>Rooms</strong><small>Manage dormitory rooms</small></div>
-                <form method="GET" class="search-bar">
+                <form method="GET" class="search-bar" role="search">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by room number...">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by room number..." aria-label="Search rooms">
+                    <button type="submit" aria-label="Search rooms"><i class="fa-solid fa-arrow-right"></i></button>
                 </form>
+                @include('admin.partials.notification-bell')
                 <div class="admin-profile-badge">
                     <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                     <div class="user-info">
@@ -644,10 +650,21 @@
                             <tbody>
                                 @forelse ($rooms as $room)
                                     @php
+                                        $roomIsFull = $room->students_count >= $room->capacity;
+                                        $displayStatus = $room->status === 'maintenance'
+                                            ? 'maintenance'
+                                            : ($roomIsFull ? 'full' : $room->status);
                                         $statusClasses = [
                                             'available'   => 'available',
                                             'occupied'    => 'occupied',
+                                            'full'        => 'full',
                                             'maintenance' => 'maintenance',
+                                        ];
+                                        $statusLabels = [
+                                            'available'   => 'Available',
+                                            'occupied'    => 'Occupied',
+                                            'full'        => 'Full / Not Available',
+                                            'maintenance' => 'Maintenance',
                                         ];
                                     @endphp
                                     <tr>
@@ -663,8 +680,8 @@
                                         <td>{{ $room->capacity }}</td>
                                         <td>{{ $room->students_count }} / {{ $room->capacity }}</td>
                                         <td>
-                                            <span class="status-pill {{ $statusClasses[$room->status] ?? 'available' }}">
-                                                {{ ucfirst($room->status) }}
+                                            <span class="status-pill {{ $statusClasses[$displayStatus] ?? 'available' }}">
+                                                {{ $statusLabels[$displayStatus] ?? ucfirst($displayStatus) }}
                                             </span>
                                         </td>
                                         <td>

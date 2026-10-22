@@ -3,18 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\EmailVerificationCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class RegisterController extends Controller
 {
-    public function register(Request $request)
+    public function register(Request $request, EmailVerificationCodeService $verificationCodes)
     {
         $fields = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'course'   => [
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'course' => [
                 'required',
                 Rule::in([
                     'Information Technology',
@@ -23,7 +24,7 @@ class RegisterController extends Controller
                     'Office Administration',
                     'Political Science',
                     'Communication',
-                ])
+                ]),
             ],
             'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')],
             'password' => [
@@ -42,15 +43,20 @@ class RegisterController extends Controller
             'password.regex' => 'The password must include lowercase and uppercase letters, a number, and a symbol.',
         ]);
 
-        User::create([
-            'name'     => $fields['name'],
-            'email'    => $fields['email'],
-            'course'   => $fields['course'],
+        $user = User::create([
+            'name' => $fields['name'],
+            'email' => $fields['email'],
+            'course' => $fields['course'],
             'username' => $fields['username'],
             'password' => Hash::make($fields['password']),
-            'role'     => 'student', // required if your `users` table has no default for this
+            'role' => 'student', // required if your `users` table has no default for this
+            'email_verification_required' => true,
         ]);
 
-        return redirect('/login')->with('success', 'Registration successful! Please login.');
+        $verificationCodes->send($user);
+
+        return redirect()->route('login')
+            ->with('success', 'Registration successful! Please log in.')
+            ->withInput(['username' => $user->username]);
     }
 }

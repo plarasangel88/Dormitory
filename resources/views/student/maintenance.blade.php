@@ -220,7 +220,8 @@
         .card-panel h3 { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
         .card-panel h3 i { color: var(--amber); }
 
-        .maintenance-layout { display: grid; grid-template-columns: 370px 1fr; gap: 20px; align-items: start; }
+        .maintenance-layout { display: grid; grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr); gap: 14px; align-items: start; }
+        .maintenance-layout > .card-panel { min-width: 0; }
 
         .form-group { margin-bottom: 17px; }
         .form-group:last-of-type { margin-bottom: 0; }
@@ -264,8 +265,10 @@
         }
         .btn-submit:hover { background-color: var(--navy-mid); }
 
-        .history-card { padding: 0; overflow: hidden; }
+        .history-card { padding: 0; overflow: hidden; min-width: 0; }
         .history-card h3 { padding: 20px 20px 0; margin-bottom: 12px; }
+        .history-table-wrap { width: 100%; overflow-x: auto; }
+        .history-card table { width: 100%; table-layout: fixed; }
         table { width: 100%; border-collapse: collapse; }
         thead { background-color: var(--paper); }
         th {
@@ -297,7 +300,25 @@
         .empty-row td { text-align: center; padding: 46px 18px; color: var(--text-secondary); font-size: 13px; }
         .empty-row tr:hover { background: none; }
 
-        @media (max-width: 1080px) {
+        .message-thread { display: grid; gap: 10px; max-height: 300px; overflow-y: auto; padding: 12px; border: 1px solid var(--border-color); border-radius: 10px; background: #f8f9fb; }
+        .maintenance-message { max-width: 88%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 11px; background: #fff; }
+        .maintenance-message.is-mine { justify-self: end; border-color: #d8e3f1; background: #edf3fb; }
+        .maintenance-message-meta { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 5px; color: var(--text-secondary); font-size: 10px; }
+        .maintenance-message-body { margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-wrap; }
+        .message-empty { margin: 0; color: var(--text-secondary); font-size: 12px; text-align: center; }
+        .message-form { display: grid; gap: 9px; margin-top: 12px; }
+        .message-form textarea { width: 100%; min-height: 76px; padding: 11px 13px; resize: vertical; border: 1.5px solid var(--border-color); border-radius: 8px; background: #fff; color: var(--text-primary); font: 14px 'Inter', sans-serif; }
+        .message-form textarea:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(240, 168, 87, 0.18); }
+        .message-form .btn-submit { width: auto; justify-self: end; margin-top: 0; padding: 10px 16px; }
+        .conversation-card { margin-bottom: 22px; }
+        .conversation-card h3 { margin-bottom: 12px; }
+        .conversation-subtitle { margin: -6px 0 12px; color: var(--text-secondary); font-size: 12px; }
+        .message-action-form { margin: 0; }
+        .message-count { width: 100%; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 7px 9px; border: 1px solid #d8deea; border-radius: 8px; background: #fff; color: var(--navy-deep); font: 600 11px 'Inter', sans-serif; white-space: nowrap; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
+        .message-count:hover { border-color: var(--navy-mid); background: #f3f6fa; }
+        .message-count i { color: var(--navy-soft); }
+
+        @media (max-width: 1050px) {
             .maintenance-layout { grid-template-columns: 1fr; }
         }
         @media (max-width: 860px) {
@@ -307,12 +328,77 @@
             .sidebar-menu { flex-direction: row; }
             .sidebar-footer { padding-top: 0; border-top: none; margin-left: 12px; }
             .search-bar { width: 220px; }
-            .history-card { overflow-x: auto; }
+            .history-card table { min-width: 700px; }
         }
     </style>
     @include('student.partials.theme')
+    <style>
+        .maintenance-page .top-header, .maintenance-page .student-shared-header { min-height: 58px; padding: 6px 16px !important; }
+        .maintenance-page .student-shared-header .header-left, .maintenance-page .student-shared-header .header-right { gap: 9px; }
+        .maintenance-page .dashboard-body { padding: 12px 18px !important; }
+        .maintenance-page .welcome-banner { display: none !important; }
+        .maintenance-page .metrics-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 9px; margin: 0 0 12px; }
+        .maintenance-page .metric-card { min-height: 66px; padding: 9px 11px; gap: 9px; border-radius: 10px; }
+        .maintenance-page .metric-icon { width: 34px; height: 34px; flex-basis: 34px; border-radius: 8px; font-size: 14px; }
+        .maintenance-page .metric-title { font-size: 9px; line-height: 1.25; }
+        .maintenance-page .metric-value { margin-top: 2px; font-size: 18px; line-height: 1.15; }
+        .maintenance-page .maintenance-layout { grid-template-columns: minmax(300px, .8fr) minmax(0, 1.2fr); gap: 14px; }
+        .maintenance-page .maintenance-layout > .card-panel { padding: 14px; }
+        .maintenance-page .card-panel h3 { margin-bottom: 10px; font-size: 15px; }
+        .maintenance-page .form-group { margin-bottom: 9px; }
+        .maintenance-page .form-group label { margin-bottom: 4px; font-size: 11px; }
+        .maintenance-page .form-group select,
+        .maintenance-page .form-group textarea { padding: 8px 10px; border-radius: 7px; font-size: 12px; }
+        .maintenance-page .form-group select { min-height: 36px; }
+        .maintenance-page .form-group textarea { min-height: 64px; }
+        .maintenance-page .form-hint { margin-top: 4px; font-size: 10px; line-height: 1.35; }
+        .maintenance-page .btn-submit { min-height: 36px; margin-top: 3px; padding: 8px 12px; border-radius: 7px; font-size: 12px; }
+        .maintenance-page .history-card h3 { padding: 14px 14px 0; margin-bottom: 8px; }
+        .maintenance-page .history-card th { padding: 8px 5px; font-size: 9px; letter-spacing: .03em; }
+        .maintenance-page .history-card td { padding: 8px 5px; font-size: 10px; line-height: 1.35; }
+        .maintenance-page .history-card th:nth-child(1), .maintenance-page .history-card td:nth-child(1) { width: 13%; white-space: nowrap; }
+        .maintenance-page .history-card th:nth-child(2), .maintenance-page .history-card td:nth-child(2) { width: 14%; }
+        .maintenance-page .history-card th:nth-child(3), .maintenance-page .history-card td:nth-child(3) { width: 20%; }
+        .maintenance-page .history-card th:nth-child(4), .maintenance-page .history-card td:nth-child(4) { width: 14%; }
+        .maintenance-page .history-card th:nth-child(5), .maintenance-page .history-card td:nth-child(5) { width: 15%; }
+        .maintenance-page .history-card th:nth-child(6), .maintenance-page .history-card td:nth-child(6) { width: 24%; }
+        .maintenance-page .badge { padding: 3px 7px; font-size: 9px; }
+        .maintenance-page .message-count { min-height: 30px; gap: 4px; padding: 5px 6px; font-size: 9px; }
+        .maintenance-page .message-thread { max-height: 190px; gap: 7px; padding: 9px; }
+        .maintenance-page .maintenance-message { padding: 7px 9px; }
+        .maintenance-page .message-form { grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px 10px; margin-top: 12px; }
+        .maintenance-page .message-form label,
+        .maintenance-page .message-form .field-error { grid-column: 1 / -1; }
+        .maintenance-page .message-form label { margin: 0 0 -2px; color: var(--text-primary); font-size: 12px; font-weight: 600; }
+        .maintenance-page .message-form textarea { grid-column: 1; min-width: 0; min-height: 44px; height: 44px; padding: 10px 12px; font-size: 13px; line-height: 1.4; }
+        .maintenance-page .message-form .field-error { margin: -2px 0 0; color: #9b3b37; font-size: 11px; }
+        .maintenance-page .message-form .btn-submit { grid-column: 2; grid-row: 2; align-self: stretch; min-height: 44px; padding: 8px 14px; white-space: nowrap; }
+        .maintenance-page .conversation-card { margin-bottom: 12px; padding: 14px; }
+        .maintenance-page .conversation-card h3 { margin-bottom: 8px; }
+        .maintenance-page .conversation-subtitle { margin: -4px 0 8px; font-size: 10px; }
+        .maintenance-page .alert-success, .maintenance-page .alert-error { margin-bottom: 10px; padding: 9px 12px; font-size: 11px; }
+
+        @media (max-width: 1050px) {
+            .maintenance-page .top-header, .maintenance-page .student-shared-header { min-height: 56px; padding: 6px 12px !important; }
+            .maintenance-page .dashboard-body { padding: 12px 14px !important; }
+            .maintenance-page .maintenance-layout { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 900px) {
+            .maintenance-page .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        }
+        @media (max-width: 600px) {
+            .maintenance-page .dashboard-body { padding: 10px 10px !important; }
+            .maintenance-page .maintenance-layout { gap: 10px; }
+            .maintenance-page .maintenance-layout > .card-panel { padding: 12px; }
+            .maintenance-page .history-card th, .maintenance-page .history-card td { padding: 7px 5px; }
+            .maintenance-page .message-form { grid-template-columns: minmax(0, 1fr); }
+            .maintenance-page .message-form textarea,
+            .maintenance-page .message-form .btn-submit { grid-column: 1; }
+            .maintenance-page .message-form .btn-submit { grid-row: auto; justify-self: stretch; width: 100%; }
+        }
+    </style>
 </head>
-<body>
+<body class="maintenance-page">
     <div class="app-container">
         <!-- Sidebar Navigation (same skin as Student Dashboard; links unchanged) -->
         @include('student.partials.sidebar')
@@ -357,6 +443,30 @@
                         <p style="margin-top: 8px;">{{ $selectedRequest->description }}</p>
                         <p style="margin-top: 8px;">Status: {{ str_replace('_', ' ', ucfirst($selectedRequest->status)) }} · Submitted {{ $selectedRequest->created_at->format('M d, Y') }}</p>
                     </div>
+                    <section class="card-panel conversation-card" aria-labelledby="maintenanceConversationTitle">
+                        <h3 id="maintenanceConversationTitle"><i class="fa-solid fa-comments"></i> Messages with the Admin</h3>
+                        <p class="conversation-subtitle">Conversation for this maintenance request.</p>
+                        <div class="message-thread" aria-live="polite">
+                            @forelse($selectedRequest->messages as $message)
+                                <article class="maintenance-message {{ (int) $message->user_id === (int) auth()->id() ? 'is-mine' : '' }}">
+                                    <div class="maintenance-message-meta">
+                                        <strong>{{ (int) $message->user_id === (int) auth()->id() ? 'You' : ($message->user->name ?? 'Dorm Admin') }}</strong>
+                                        <time datetime="{{ $message->created_at->toIso8601String() }}">{{ $message->created_at->format('M d, g:i A') }}</time>
+                                    </div>
+                                    <p class="maintenance-message-body">{{ $message->body }}</p>
+                                </article>
+                            @empty
+                                <p class="message-empty">No messages yet. Send a message to contact the dorm administrator.</p>
+                            @endforelse
+                        </div>
+                        <form class="message-form" method="POST" action="{{ route('maintenance.messages.store', $selectedRequest) }}">
+                            @csrf
+                            <label for="maintenanceMessage">Your message</label>
+                            <textarea id="maintenanceMessage" name="body" maxlength="2000" required placeholder="Write a message about this request...">{{ old('body') }}</textarea>
+                            @error('body') <div class="field-error">{{ $message }}</div> @enderror
+                            <button type="submit" class="btn-submit"><i class="fa-solid fa-paper-plane"></i> Send Message</button>
+                        </form>
+                    </section>
                 @endif
 
                 <!-- Summary metrics -->
@@ -431,6 +541,7 @@
 
                     <div class="card-panel history-card">
                         <h3><i class="fa-solid fa-clock-rotate-left"></i> Your Requests</h3>
+                        <div class="history-table-wrap">
                         <table>
                             <thead>
                                 <tr>
@@ -439,7 +550,7 @@
                                     <th>Description</th>
                                     <th>Priority</th>
                                     <th>Status</th>
-                                    <th>Details</th>
+                                    <th>Messages</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -449,8 +560,19 @@
                                         <td>{{ \Illuminate\Support\Str::startsWith($req->title, '[') ? \Illuminate\Support\Str::before(\Illuminate\Support\Str::after($req->title, '['), ']') : 'Other' }}</td>
                                         <td><div class="desc-cell">{{ \Illuminate\Support\Str::limit($req->description, 120) }}</div></td>
                                         <td><span class="badge badge-priority-{{ $req->priority }}">{{ $req->priority }}</span></td>
-                                        <td><span class="badge badge-{{ $req->status }}">{{ str_replace('_', ' ', $req->status) }}</span></td>
-                                        <td><a href="{{ route('maintenance.show', $req) }}">View</a></td>
+                                        <td>
+                                            <span class="badge badge-{{ $req->status }}">{{ str_replace('_', ' ', $req->status) }}</span>
+                                            @if ($req->due_at)
+                                                <small class="form-hint">Target: {{ $req->due_at->format('M d, Y') }}</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <form class="message-action-form" method="GET" action="{{ route('maintenance.show', $req) }}">
+                                                <button class="message-count" type="submit" aria-label="Open {{ $req->messages_count }} messages for this request">
+                                                    <i class="fa-solid fa-comments" aria-hidden="true"></i> Messages ({{ $req->messages_count }})
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr class="empty-row">
@@ -459,6 +581,7 @@
                                 @endforelse
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -232,6 +232,8 @@
             color: var(--navy);
             font-size: 20px;
         }
+        .page-back-button { display: inline-grid; place-items: center; flex: 0 0 34px; width: 34px; height: 34px; padding: 0; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--navy); cursor: pointer; }
+        .page-back-button:hover { border-color: #b9c5d7; background: #f5f7fb; }
 
         .page-heading h2 {
             font-size: 20px;
@@ -379,6 +381,7 @@
             border-bottom: 1px solid #f0f1f4;
             cursor: pointer;
         }
+        .notification-link { color: inherit; text-decoration: none; }
 
         .notification-item:hover {
             background: #fafbfe;
@@ -1066,6 +1069,133 @@
                 right: -85px;
             }
         }
+
+        /* Keep the standalone dashboard aligned with the shared student pages. */
+        .main-content { font-size: 14px; line-height: 1.65; }
+        .top-header { height: 76px; min-height: 76px; padding: 0 28px; }
+        .page-heading h2 { font-size: 18px; }
+        .page-heading p { font-size: 12px; }
+        .dashboard-body { padding: 24px 28px; }
+        .welcome-banner { padding: 22px 28px; margin-bottom: 20px; }
+        .welcome-content h1 { font-size: 25px; line-height: 1.3; }
+        .welcome-content p { font-size: 13px; line-height: 1.55; }
+        .stats-grid, .content-grid { gap: 12px; }
+        .stat-card, .card-panel { padding: 16px; }
+        .stat-label, .metric-title { font-size: 11px; }
+        .stat-value { font-size: 22px; }
+        .card-panel h3 { font-size: 15px; }
+        .data-table th, table th { font-size: 10px; }
+        .data-table td, table td { font-size: 12px; line-height: 1.45; }
+        .data-table th, .data-table td, table th, table td { padding: 10px 11px; }
+        .search-bar {
+            width: min(260px, 34vw); min-width: 180px; height: 42px; padding: 4px 12px;
+            border: 1px solid #d8deea; border-radius: 9px; background: #fff;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        .search-bar:focus-within { border-color: var(--navy-soft); box-shadow: 0 0 0 3px #365c8e18; }
+        .search-bar i { flex: 0 0 16px; width: 16px; font-size: 14px; }
+        .search-bar input { height: 32px; padding: 0; border: 0; border-radius: 0; outline: 0; background: transparent; box-shadow: none; font-size: 12px; }
+        .quick-actions { gap: 8px; }
+        .quick-actions a, .quick-action { display: inline-flex; align-items: center; gap: 8px; }
+        .quick-actions i, .quick-action i { flex: 0 0 auto; line-height: 1; }
+
+        .payment-reminders { display: grid; gap: 8px; margin-bottom: 16px; }
+        .payment-reminder {
+            display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+            padding: 11px 14px; border: 1px solid; border-radius: 10px;
+        }
+        .payment-reminder--overdue { border-color: #f1b8b4; background: #fff1f0; color: #8d2923; }
+        .payment-reminder--due { border-color: #f0d19a; background: #fff8e8; color: #76500d; }
+        .payment-reminder-icon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 8px; background: rgb(255 255 255 / 65%); font-size: 15px; }
+        .payment-reminder-content { display: grid; min-width: 0; gap: 2px; }
+        .payment-reminder-heading, .payment-reminder-details { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+        .payment-reminder-heading strong { font-size: 13px; }
+        .payment-reminder-due, .payment-reminder-details { font-size: 12px; }
+        .payment-reminder-details { flex-wrap: wrap; }
+        .payment-reminder-content small { font-size: 11px; }
+        .payment-reminder-action { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 34px; padding: 0 11px; border: 1px solid currentColor; border-radius: 7px; color: inherit; font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+        .payment-reminder-action:hover { background: rgb(255 255 255 / 55%); }
+
+        @media (max-width: 900px) {
+            .dashboard-body { padding: 20px 18px; }
+            .top-header { height: 70px; min-height: 70px; padding: 0 18px; }
+            .welcome-banner { padding: 20px 22px; }
+        }
+        @media (max-width: 600px) {
+            .dashboard-body { padding: 16px 12px 24px; }
+            .top-header { height: 64px; min-height: 64px; padding: 0 12px; }
+            .welcome-banner { padding: 18px 16px; }
+            .welcome-content h1 { font-size: 21px; }
+            .stat-card, .card-panel { padding: 14px; }
+            .top-header { height: auto; flex-wrap: wrap; padding: 8px 12px; }
+            .header-left, .header-right { width: 100%; }
+            .header-right { gap: 8px; }
+            .header-right .search-bar { display: flex; flex: 1 1 auto; width: auto; max-width: none; min-width: 0; height: 38px; }
+            .payment-reminder { grid-template-columns: 30px minmax(0, 1fr); gap: 9px; padding: 10px; }
+            .payment-reminder-icon { width: 30px; height: 30px; }
+            .payment-reminder-heading { align-items: flex-start; flex-direction: column; gap: 0; }
+            .payment-reminder-action { grid-column: 2; justify-self: start; min-height: 30px; }
+        }
+
+        /* Match the shared metric-card sizing used by the other student pages. */
+        .main-content .stats-grid {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            align-items: stretch;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .main-content .stat-card {
+            display: flex;
+            min-width: 0;
+            min-height: 96px;
+            align-items: center;
+            padding: 14px 16px;
+            gap: 12px;
+        }
+        .main-content .content-grid { align-items: start; gap: 12px; }
+        .main-content .card-panel { min-width: 0; margin-bottom: 12px; padding: 14px; }
+        @media (max-width: 1000px) {
+            .main-content .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 600px) {
+            .main-content .stats-grid { gap: 8px; margin-bottom: 12px; }
+            .main-content .stat-card { min-height: 82px; padding: 12px; gap: 8px; }
+            .main-content .card-panel { padding: 12px; }
+        }
+
+        /* Consistent dashboard type scale: readable labels, body text, and headings. */
+        .main-content { font-size: 14px; }
+        .page-heading h2 { font-size: 19px; }
+        .page-heading p { font-size: 13px; }
+        .welcome-content .eyebrow { font-size: 11px; }
+        .welcome-content h1 { font-size: 26px; }
+        .welcome-content p { font-size: 14px; }
+        .stat-label { font-size: 12px; }
+        .stat-value { font-size: 23px; }
+        .stat-note, .room-detail span, .ann-meta, .dashboard-footer { font-size: 11px; }
+        .main-content .stats-grid { gap: 12px; }
+        .main-content .stat-card {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-rows: auto auto;
+            align-content: center;
+            min-height: 0;
+            padding: 14px;
+            gap: 10px;
+        }
+        .main-content .stat-top { min-width: 0; margin: 0; }
+        .main-content .stat-top > div:first-child { min-width: 0; }
+        .main-content .stat-note { margin: 0; font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+        .main-content .stat-value { line-height: 1.2; }
+        .card-panel h3 { font-size: 17px; }
+        .action-text h4, .room-top h4 { font-size: 14px; }
+        .action-text p, .room-description, .payment-caption, .ann-body { font-size: 12px; }
+        .status-badge, .payment-status { font-size: 10px; }
+        .room-detail strong, .ann-title { font-size: 13px; }
+        .empty-message { font-size: 12px; }
+        .search-bar input { font-size: 13px; }
+        .data-table th, table th { font-size: 11px; }
+        .data-table td, table td { font-size: 13px; }
     </style>
 </head>
 
@@ -1083,6 +1213,9 @@
                 <button class="menu-toggle" id="menuToggle" aria-label="Open navigation">
                     <i class="fa-solid fa-bars"></i>
                 </button>
+                <button class="page-back-button" type="button" data-page-back data-fallback="{{ route('login') }}" aria-label="Go back" title="Go back">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                </button>
 
                 <div class="page-heading">
                     <h2>Student Dashboard</h2>
@@ -1094,7 +1227,7 @@
 
                 <div class="search-bar">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="dashboardSearch" placeholder="Search announcements...">
+                    <input type="text" id="dashboardSearch" placeholder="Search announcements..." aria-label="Search announcements">
                 </div>
 
                 <!-- ANNOUNCEMENT NOTIFICATION BELL -->
@@ -1118,7 +1251,7 @@
                     <div class="notification-dropdown" id="notificationDropdown">
 
                         <div class="notification-header">
-                            <h3>Announcements</h3>
+                            <h3>Notifications</h3>
                             <button type="button" id="markAllRead">Mark all as read</button>
                         </div>
 
@@ -1176,6 +1309,8 @@
                     <strong>{{ now()->format('F d, Y') }}</strong>
                 </div>
             </div>
+
+            @include('student.partials.payment-reminders')
 
             <!-- SUMMARY CARDS -->
             <div class="section-heading">
@@ -1505,6 +1640,22 @@
         })->values();
     @endphp
     <script type="application/json" id="announcementData">@json($announcementData)</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const backButton = document.querySelector('[data-page-back]');
+            if (!backButton) return;
+
+            backButton.addEventListener('click', () => {
+                const referrer = document.referrer;
+                if (referrer && new URL(referrer).origin === window.location.origin) {
+                    window.history.back();
+                    return;
+                }
+
+                window.location.href = backButton.dataset.fallback;
+            });
+        });
+    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -1530,11 +1681,17 @@
              * A new announcement ID will increase the unread count.
              */
             const userId = @json(auth()->id());
+            const notificationFeedUrl = @json(route('notifications.feed'));
+            const notificationReadAllUrl = @json(route('notifications.read-all'));
+            const notificationReadUrl = @json(route('notifications.read', ['notification' => '__notification__']));
+            const csrfToken = @json(csrf_token());
             const storagePrefix = 'dormPortalAnnouncements:' + userId + ':';
             const lastSeenKey = storagePrefix + 'lastSeenId';
             const readIdsKey = storagePrefix + 'readIds';
 
             let announcements = [];
+            let activityNotifications = [];
+            let activityUnreadCount = 0;
             let isRefreshing = false;
 
             function readStoredIds() {
@@ -1590,7 +1747,7 @@
             }
 
             function updateBadge() {
-                const unreadCount = getUnreadAnnouncements().length;
+                const unreadCount = getUnreadAnnouncements().length + activityUnreadCount;
 
                 if (unreadCount > 0) {
                     notificationBadge.hidden = false;
@@ -1618,12 +1775,12 @@
             function renderNotifications() {
                 notificationList.replaceChildren();
 
-                if (announcements.length === 0) {
+                if (announcements.length === 0 && activityNotifications.length === 0) {
                     const empty = makeElement('div', 'empty-notification');
                     const icon = makeElement('i', 'fa-regular fa-bell-slash');
 
                     empty.appendChild(icon);
-                    empty.appendChild(document.createTextNode('No announcements right now.'));
+                    empty.appendChild(document.createTextNode('No notifications right now.'));
 
                     notificationList.appendChild(empty);
                     updateBadge();
@@ -1675,6 +1832,41 @@
                     notificationList.appendChild(row);
                 });
 
+                activityNotifications.forEach(function (item) {
+                    const row = makeElement(
+                        'a',
+                        'notification-item notification-link' + (item.is_read ? '' : ' unread')
+                    );
+                    const destination = new URL(item.url || '/', window.location.origin);
+                    row.href = destination.origin === window.location.origin
+                        ? destination.href
+                        : @json(route('dashboard'));
+
+                    const iconWrap = makeElement('span', 'notification-icon');
+                    const iconName = /^[a-z-]+$/.test(item.icon || '') ? item.icon : 'fa-bell';
+                    iconWrap.appendChild(makeElement('i', 'fa-solid ' + iconName));
+
+                    const content = makeElement('span', 'notification-text');
+                    content.appendChild(makeElement('h4', '', item.title || 'Dorm Portal update'));
+                    content.appendChild(makeElement('p', '', item.message || ''));
+                    content.appendChild(makeElement('small', 'notification-time', item.created_human || 'Recently'));
+                    row.append(iconWrap, content);
+
+                    row.addEventListener('click', async function (event) {
+                        event.preventDefault();
+                        try {
+                            await fetch(notificationReadUrl.replace('__notification__', encodeURIComponent(item.id)), {
+                                method: 'PATCH',
+                                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                                credentials: 'same-origin'
+                            });
+                        } finally {
+                            window.location.assign(row.href);
+                        }
+                    });
+                    notificationList.appendChild(row);
+                });
+
                 updateBadge();
             }
 
@@ -1691,7 +1883,7 @@
                 renderNotifications();
             }
 
-            function markAllRead() {
+            async function markAllRead() {
                 saveReadIds(announcements.map(function (item) {
                     return String(item.id);
                 }));
@@ -1702,6 +1894,16 @@
                         String(announcements[0].id)
                     );
                 }
+
+                await fetch(notificationReadAllUrl, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                    credentials: 'same-origin'
+                });
+                activityNotifications = activityNotifications.map(function (item) {
+                    return { ...item, is_read: true };
+                });
+                activityUnreadCount = 0;
 
                 updateBadge();
                 renderNotifications();
@@ -1862,6 +2064,23 @@
                 applySearch();
             }
 
+            async function refreshActivityNotifications() {
+                try {
+                    const response = await fetch(notificationFeedUrl, {
+                        headers: { 'Accept': 'application/json' },
+                        credentials: 'same-origin',
+                        cache: 'no-store'
+                    });
+                    if (!response.ok) throw new Error('Could not refresh notifications.');
+                    const data = await response.json();
+                    activityNotifications = Array.isArray(data.notifications) ? data.notifications : [];
+                    activityUnreadCount = Number(data.unread_count) || 0;
+                    renderNotifications();
+                } catch (error) {
+                    console.warn('Notification refresh failed:', error);
+                }
+            }
+
             async function refreshAnnouncements() {
                 if (isRefreshing) {
                     return;
@@ -1910,14 +2129,19 @@
 
             // Initialize from Laravel data.
             loadAnnouncementData(getCurrentData(), true);
+            refreshActivityNotifications();
 
             // Check for new announcements every 30 seconds.
-            window.setInterval(refreshAnnouncements, 30000);
+            window.setInterval(function () {
+                refreshAnnouncements();
+                refreshActivityNotifications();
+            }, 30000);
 
             // Refresh when the user returns to the tab.
             document.addEventListener('visibilitychange', function () {
                 if (!document.hidden) {
                     refreshAnnouncements();
+                    refreshActivityNotifications();
                 }
             });
 

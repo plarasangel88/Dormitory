@@ -144,8 +144,65 @@
         }
     </style>
     @include('student.partials.theme')
+    <style>
+        body.student-room .dashboard-body { padding: 24px 28px !important; }
+        body.student-room .welcome-banner { padding: 22px 28px !important; margin-bottom: 18px !important; }
+        body.student-room .welcome-banner h1 { font-size: 24px !important; line-height: 1.3 !important; }
+        body.student-room .welcome-banner p { margin-top: 5px; font-size: 13px !important; line-height: 1.55 !important; }
+        body.student-room .room-overview-card { gap: 10px; margin-bottom: 12px; padding: 12px 14px; }
+        body.student-room .room-overview-icon { width: 42px; height: 42px; flex-basis: 42px; font-size: 1.1rem; }
+        body.student-room .room-overview-info h2 { font-size: 16px !important; }
+        body.student-room .room-overview-info p { font-size: 12px; }
+        body.student-room .room-status-pill { padding: 5px 11px; font-size: 10px; }
+        body.student-room .metrics-grid { gap: 12px; margin-bottom: 18px; }
+        body.student-room .metric-card { min-height: 92px; gap: 12px; padding: 14px; }
+        body.student-room .metric-icon { width: 36px; height: 36px; flex-basis: 36px; font-size: 1rem; }
+        body.student-room .metric-title { font-size: 10px; line-height: 1.35; }
+        body.student-room .metric-value { margin-top: 3px; font-size: 20px; line-height: 1.3; overflow-wrap: anywhere; }
+        body.student-room .card-panel { margin-bottom: 12px; padding: 14px; }
+        body.student-room .card-panel h3 { margin-bottom: 10px; font-size: 15px; }
+        body.student-room .panel-hint { margin: -5px 0 10px; font-size: 11px; }
+        body.student-room .room-content-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(280px, .9fr); align-items: start; gap: 12px; }
+        body.student-room .room-content-column { min-width: 0; }
+        body.student-room .room-content-column .card-panel { height: auto; }
+        body.student-room .room-content-grid .card-panel { margin-bottom: 8px; }
+        body.student-room .room-content-column .assign-form { grid-template-columns: minmax(0, 1fr); }
+        body.student-room .roommates-grid { gap: 7px; }
+        body.student-room .roommate-card { gap: 7px; padding: 9px; }
+        body.student-room .assign-form { gap: 7px; }
+        body.student-room .form-control { min-height: 38px; padding: 8px 10px; font-size: 13px; }
+        body.student-room .form-label { margin-bottom: 4px; font-size: 10px; }
+        body.student-room .btn-assign { min-height: 38px; padding: 8px 12px; font-size: 12px; }
+        body.student-room .amenities-grid, body.student-room .quick-actions-grid { gap: 7px; }
+        body.student-room .amenity-chip, body.student-room .action-btn { padding: 9px 10px; font-size: 12px; }
+
+        @media (max-width: 900px) {
+            body.student-room .dashboard-body { padding: 20px 18px !important; }
+            body.student-room .welcome-banner { padding: 20px 22px !important; }
+            body.student-room .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            body.student-room .room-content-grid { grid-template-columns: minmax(0, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            body.student-room .dashboard-body { padding: 16px 12px 24px !important; }
+            body.student-room .welcome-banner { padding: 18px 16px !important; }
+            body.student-room .welcome-banner h1 { font-size: 21px !important; }
+            body.student-room .welcome-banner p { font-size: 12px !important; }
+            body.student-room .room-overview-card { gap: 10px; padding: 12px; }
+            body.student-room .room-overview-icon { width: 40px; height: 40px; flex-basis: 40px; }
+            body.student-room .room-status-pill { padding: 4px 8px; font-size: 9px; }
+            body.student-room .metrics-grid { gap: 8px; }
+            body.student-room .room-content-grid { gap: 0; }
+            body.student-room .metric-card { min-height: 82px; gap: 8px; padding: 12px; }
+            body.student-room .metric-icon { width: 34px; height: 34px; flex-basis: 34px; font-size: 14px; }
+            body.student-room .metric-value { font-size: 17px; }
+            body.student-room .card-panel { padding: 12px; }
+            body.student-room .assign-form { grid-template-columns: minmax(0, 1fr); }
+            body.student-room .btn-assign { justify-content: center; }
+        }
+    </style>
 </head>
-<body>
+<body class="student-room">
     <div class="app-container">
         @include('student.partials.sidebar')
 
@@ -251,6 +308,8 @@
                     </section>
 
                     <!-- Roommates + today's tasks -->
+                    <div class="room-content-grid">
+                        <div class="room-content-column">
                     <div class="card-panel">
                         <h3><i class="fa-solid fa-people-roof"></i> Roommates &amp; Today's Tasks</h3>
                         <p class="panel-hint">Roommates are the students your admin assigned to this room. {{ $today->format('l, M j') }}</p>
@@ -314,8 +373,10 @@
                             @endforeach
                         </div>
                     </div>
+                        </div>
 
                     <!-- Assign a task -->
+                        <div class="room-content-column">
                     <div class="card-panel">
                         <h3><i class="fa-solid fa-list-check"></i> Assign a Task</h3>
                         <form method="POST" action="{{ route('room.tasks.store') }}" class="assign-form">
@@ -367,8 +428,12 @@
                             </div>
                         </div>
                     @endif
+                        </div>
+                    </div>
 
                     <!-- Amenities -->
+                    <div class="room-content-grid">
+                        <div class="room-content-column">
                     <div class="card-panel">
                         <h3><i class="fa-solid fa-star"></i> Room Amenities</h3>
                         <div class="amenities-grid">
@@ -380,13 +445,17 @@
                             <div class="amenity-chip"><i class="fa-solid fa-pen-to-square"></i> Study Desk</div>
                         </div>
                     </div>
+                        </div>
 
                     <!-- Actions -->
+                        <div class="room-content-column">
                     <div class="card-panel">
                         <h3><i class="fa-solid fa-bolt"></i> Quick Actions</h3>
                         <div class="quick-actions-grid">
                             <a href="{{ route('maintenance.index') }}" class="action-btn"><i class="fa-solid fa-wrench"></i> Report an Issue</a>
                             <a href="#" class="action-btn"><i class="fa-solid fa-arrows-rotate"></i> Request Room Change</a>
+                        </div>
+                    </div>
                         </div>
                     </div>
 

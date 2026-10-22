@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MaintenanceRequest extends Model
 {
@@ -20,10 +21,13 @@ class MaintenanceRequest extends Model
         'admin_notes',
         'resolved_by',
         'resolved_at',
+        'assigned_to',
+        'due_at',
     ];
 
     protected $casts = [
         'resolved_at' => 'datetime',
+        'due_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -39,6 +43,16 @@ class MaintenanceRequest extends Model
     public function resolvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resolved_by');
+    }
+
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(MaintenanceMessage::class)->oldest();
     }
 
     public function scopePending($query)

@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Room;
 use App\Models\Payment;
-use App\Models\Announcement;
+use App\Models\Room;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -25,7 +24,6 @@ class DashboardController extends Controller
             ? round(($occupiedBeds / $totalBeds) * 100, 1)
             : 0;
 
-        $announcements = Announcement::with('author')->feed()->take(10)->get();
         $paymentMonitoring = Payment::with(['user.room'])
             ->latest()
             ->take(30)
@@ -52,7 +50,6 @@ class DashboardController extends Controller
             'pendingPayments',
             'totalCollected',
             'occupancyRate',
-            'announcements',
             'paymentMonitoring'
         ));
     }

@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Notifications\EmailVerificationCode;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -18,6 +20,8 @@ class StudentProfileUpdateTest extends TestCase
             $table->string('name');
             $table->string('username')->nullable();
             $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->boolean('email_verification_required')->default(false);
             $table->string('password');
             $table->string('course')->nullable();
             $table->string('role')->default('student');
@@ -77,5 +81,41 @@ class StudentProfileUpdateTest extends TestCase
 
         $response->assertRedirect(route('profile'));
         $response->assertSessionHasErrors('emergency_contact_number');
+    }
+
+    public function test_admin_cannot_use_student_pages(): void
+    {
+        $admin = User::create([
+            'name' => 'Dorm Admin',
+            'email' => 'admin@example.test',
+            'username' => 'admin',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
+        $this->actingAs($admin)->get(route('dashboard'))->assertForbidden();
+    }
+
+    public function test_new_unverified_registrant_must_verify_before_signing_in(): void
+    {
+        Notification::fake();
+
+        User::create([
+            'name' => 'New Student',
+            'email' => 'newstudent@example.test',
+            'username' => 'newstudent',
+            'password' => 'password',
+            'role' => 'student',
+            'email_verification_required' => true,
+        ]);
+
+        $response = $this->post(route('login'), [
+            'username' => 'newstudent',
+            'password' => 'password',
+        ]);
+
+        $response->assertRedirect(route('email.verification.code.form'));
+        $this->assertGuest();
+        Notification::assertSentTo(User::where('email', 'newstudent@example.test')->first(), EmailVerificationCode::class);
     }
 }

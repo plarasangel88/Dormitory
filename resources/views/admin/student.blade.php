@@ -715,6 +715,15 @@
         }
     </style>
     @include('admin.partials.theme')
+    <style>
+        .student-records-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+        .student-records-header h3 { margin: 0; }
+        .student-records-add { min-height: 34px; padding: 7px 11px; gap: 7px; border-radius: 8px; font-size: 11px; }
+        @media (max-width: 480px) {
+            .student-records-header { align-items: flex-start; }
+            .student-records-add { flex: 0 0 auto; }
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -727,6 +736,9 @@
             <nav class="sidebar-menu">
                 <a href="{{ route('admin.dashboard') }}" class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fa-solid fa-house"></i> Dashboard
+                </a>
+                <a href="{{ route('admin.announcements.index') }}" class="menu-item {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-bullhorn"></i> Announcements
                 </a>
                 <a href="{{ route('admin.students.index') }}" class="menu-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-user-graduate"></i> Students
@@ -754,10 +766,12 @@
             <!-- Header Bar (identical to Dashboard) -->
             <header class="top-header">
                 <div class="admin-page-heading"><strong>Students</strong><small>Manage student records</small></div>
-                <div class="search-bar">
+                <form method="GET" class="search-bar" role="search">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Search student name, room #, or ID...">
-                </div>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email..." aria-label="Search students">
+                    <button type="submit" title="Search"><i class="fa-solid fa-arrow-right"></i></button>
+                </form>
+                @include('admin.partials.notification-bell')
                 <div class="admin-profile-badge">
                     <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                     <div class="user-info">
@@ -785,20 +799,13 @@
                     <div class="alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> {{ $message }}</div>
                 @enderror
 
-                <div class="toolbar">
-                    <form method="GET" class="search-bar">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name or email...">
-                        <button type="submit" title="Search"><i class="fa-solid fa-arrow-right"></i></button>
-                    </form>
-
-                    <button type="button" class="btn-add" onclick="openModal('addStudentModal')">
-                        <i class="fa-solid fa-user-plus"></i> Add Student
-                    </button>
-                </div>
-
                 <div class="card-panel">
-                    <h3><i class="fa-solid fa-user-graduate"></i> Student Records</h3>
+                    <div class="student-records-header">
+                        <h3><i class="fa-solid fa-user-graduate"></i> Student Records</h3>
+                        <button type="button" class="btn-add student-records-add" onclick="openModal('addStudentModal')">
+                            <i class="fa-solid fa-user-plus"></i> Add Student
+                        </button>
+                    </div>
                     <div class="table-responsive">
                         <table class="data-table">
                             <thead>

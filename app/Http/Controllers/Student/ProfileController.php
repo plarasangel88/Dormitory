@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Services\EmailVerificationCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -14,13 +15,13 @@ class ProfileController extends Controller
         return view('student.profile');
     }
 
-    public function update(Request $request)
+    public function update(Request $request, EmailVerificationCodeService $verificationCodes)
     {
         $user = Auth::user();
 
         $fields = $request->validate([
-            'name'   => 'required|string|max:255',
-            'email'  => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'name' => 'required|string|max:255',
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
             'contact_number' => ['nullable', 'string', 'max:30'],
             'emergency_contact_number' => ['nullable', 'string', 'max:30'],
             'residency_place' => ['nullable', 'string', 'max:255'],
@@ -33,11 +34,22 @@ class ProfileController extends Controller
                     'Office Administration',
                     'Political Science',
                     'Communication',
-                ])
+                ]),
             ],
         ]);
 
+        $emailChanged = $user->email !== $fields['email'];
+
         $user->update($fields);
+
+        if ($emailChanged) {
+            $user->forceFill(['email_verified_at' => null])->save();
+            $verificationCodes->send($user);
+
+            return redirect()->route('email.verification.code.form')
+                ->with('success', 'Profile updated. We sent a verification code to your new email address.')
+                ->withInput(['email' => $user->email]);
+        }
 
         return back()->with('success', 'Profile updated successfully!');
     }

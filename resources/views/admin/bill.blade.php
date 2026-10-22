@@ -52,6 +52,7 @@
         <a class="brand" href="{{ route('admin.dashboard') }}"><i class="fa-solid fa-building-user"></i> Dorm Portal</a>
         <nav class="nav">
             <a href="{{ route('admin.dashboard') }}"><i class="fa-solid fa-house"></i> Dashboard</a>
+            <a class="{{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}" href="{{ route('admin.announcements.index') }}"><i class="fa-solid fa-bullhorn"></i> Announcements</a>
             <a href="{{ route('admin.students.index') }}"><i class="fa-solid fa-user-graduate"></i> Students</a>
             <a href="{{ route('admin.rooms.index') }}"><i class="fa-solid fa-door-closed"></i> Rooms</a>
             <a class="active" href="{{ route('admin.payments.index') }}"><i class="fa-solid fa-wallet"></i> Payments &amp; Billing</a>
@@ -66,6 +67,7 @@
     <main>
         <header class="top-header">
             <div class="admin-page-heading"><strong>Billing</strong><small>Create and review monthly room bills</small></div>
+            @include('admin.partials.notification-bell')
             <div class="admin-profile-badge">
                 <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                 <div class="user-info"><span class="user-name">{{ auth()->user()->name }}</span><span class="user-role">ADMIN</span></div>

@@ -5,10 +5,14 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Bill;
 use App\Models\Payment;
+use App\Models\PaymentAudit;
 use App\Models\PaymentSetting;
+use App\Models\User;
+use App\Notifications\SystemActivityNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -20,6 +24,10 @@ class PaymentController extends Controller
         $user = Auth::user();
         $payments = $user->payments;
         $bills = $user->bills()->with('payments')->orderByDesc('billing_month')->get();
+        $paymentReminders = $bills->filter(fn (Bill $bill): bool => $bill->due_date !== null
+            && $bill->due_date->lte(now()->addDays(7)->endOfDay())
+            && $bill->reminderBalance() > 0
+        );
         $payableTotal = $bills->sum(function (Bill $bill) {
             return collect(Bill::ITEMS)->sum(function ($item) use ($bill) {
                 $pending = $bill->payments
@@ -41,20 +49,21 @@ class PaymentController extends Controller
                 $transaction->transaction_status = $items->contains(fn ($payment) => $payment->status !== 'verified')
                     ? ($items->contains(fn ($payment) => $payment->status === 'pending') ? 'pending' : 'rejected')
                     : 'verified';
+
                 return $transaction;
             })->values();
         $gcashQrUrl = PaymentSetting::query()->value('gcash_qr_path')
             ? route('payments.gcash-qr')
             : null;
 
-        return view('student.payments', compact('payments', 'transactions', 'bills', 'payableTotal', 'monthlyRate', 'totalPaid', 'pendingCount', 'gcashQrUrl'));
+        return view('student.payments', compact('payments', 'transactions', 'bills', 'paymentReminders', 'payableTotal', 'monthlyRate', 'totalPaid', 'pendingCount', 'gcashQrUrl'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'method'           => 'required|string|in:GCash,Cash',
-            'notes'            => 'nullable|string|max:500',
+            'method' => 'required|string|in:GCash,Cash',
+            'notes' => 'nullable|string|max:500',
         ]);
 
         $transactionReference = 'DORM-'.now()->format('Ymd').'-'.Str::upper(Str::random(8));
@@ -96,14 +105,35 @@ class PaymentController extends Controller
             }
 
             foreach ($allocations as $allocation) {
-                $user->payments()->create($allocation + [
+                $payment = $user->payments()->create($allocation + [
                     'method' => $validated['method'],
                     'reference_number' => $transactionReference,
                     'status' => 'pending',
                     'notes' => $validated['notes'] ?? null,
                 ]);
+
+                PaymentAudit::create([
+                    'payment_id' => $payment->id,
+                    'actor_id' => $user->id,
+                    'student_id' => $user->id,
+                    'reference_number' => $transactionReference,
+                    'action' => 'submitted',
+                    'new_status' => 'pending',
+                    'amount' => $payment->amount,
+                    'details' => ['method' => $payment->method, 'bill_id' => $payment->bill_id, 'applies_to' => $payment->applies_to],
+                ]);
             }
         });
+
+        $admins = User::query()->where('role', 'admin')->get();
+        Notification::send($admins, new SystemActivityNotification([
+            'type' => 'payment',
+            'title' => 'Payment submitted',
+            'message' => $user->name.' submitted payment '.$transactionReference.' for review.',
+            'url' => route('admin.payments.index'),
+            'icon' => 'fa-wallet',
+            'reference_number' => $transactionReference,
+        ]));
 
         return back()->with('success', 'Your full available balance was submitted. Transaction reference: '.$transactionReference.'. It is pending verification.');
     }

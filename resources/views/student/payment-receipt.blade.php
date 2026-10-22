@@ -21,8 +21,20 @@
         tfoot td { font-weight: 700; font-size: 18px; border-bottom: 0; }
         .actions { max-width: 760px; margin: 18px auto 0; display: flex; justify-content: flex-end; }
         button { border: 0; border-radius: 9px; background: #16213E; color: #fff; padding: 12px 18px; font-weight: 700; cursor: pointer; }
+        .actions { justify-content: space-between; gap: 12px; }
+        .back-button { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 10px 16px; border: 1px solid #d8deea; border-radius: 9px; background: #fff; color: #16213E; font: 700 13px Inter, Arial, sans-serif; text-decoration: none; cursor: pointer; }
+        .back-button:hover { background: #f5f7fb; }
+        body { padding: 24px; font-size: 13px; line-height: 1.55; }
+        .receipt { padding: 28px; border-color: #e8eaf0; border-radius: 16px; box-shadow: 0 10px 28px #172b4d0d; }
+        h1 { font-size: 26px; letter-spacing: -.02em; }
+        p, .value { font-size: 13px; }
+        .details { gap: 16px 20px; padding: 18px 0; }
+        .label { font-size: 12px; }
+        th { font-size: 12px; letter-spacing: .05em; }
+        td { font-size: 13px; }
+        button { min-height: 40px; padding: 10px 16px; font-size: 13px; }
         @media print { body { padding: 0; background: #fff; } .receipt { max-width: none; border: 0; border-radius: 0; padding: 12mm; } .actions { display: none; } }
-        @media (max-width: 560px) { body { padding: 12px; } .receipt { padding: 22px; } .details { grid-template-columns: 1fr; } }
+        @media (max-width: 560px) { body { padding: 16px; } .receipt { padding: 24px 20px; } .receipt-head { gap: 12px; } h1 { font-size: 25px; } .details { grid-template-columns: 1fr; gap: 16px; } th, td { padding: 12px 8px; font-size: 12px; } }
     </style>
 </head>
 <body>
@@ -60,6 +72,9 @@
         </table>
         <p style="margin-top:22px">This receipt confirms payment recorded and verified by the dormitory administrator.</p>
     </main>
-    <div class="actions"><button type="button" onclick="window.print()">Print receipt</button></div>
+    <div class="actions">
+        <a class="back-button" href="{{ route('payments') }}" aria-label="Back to payments">← Back to Payments</a>
+        <button type="button" onclick="window.print()">Print receipt</button>
+    </div>
 </body>
 </html>

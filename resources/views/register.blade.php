@@ -289,13 +289,13 @@
         .panel {
             align-items: flex-start !important;
             justify-content: center !important;
-            padding: 32px 40px !important;
+            padding: 22px 28px !important;
         }
         .form-card {
             width: 100% !important;
             max-width: 450px !important;
             margin: 0 auto !important;
-            padding: clamp(24px, 3vw, 38px) !important;
+            padding: clamp(20px, 2.5vw, 30px) !important;
             border: 1px solid #e8eaf0 !important;
             border-radius: 22px !important;
             background: #fff !important;
@@ -304,6 +304,9 @@
         .alert-error { font-size: 11px !important; }
         .alert-error strong,
         .alert-error li { font-size: 11px !important; }
+        @media (max-width: 860px) {
+            .panel { padding: 18px 16px !important; }
+        }
     </style>
 </head>
 <body>
@@ -359,6 +362,7 @@
 
     <div class="panel">
         <div class="form-card">
+            <button class="auth-back-button" type="button" data-page-back data-fallback="{{ route('login') }}" aria-label="Go back" title="Go back">←</button>
             <div class="mark">
                 <div class="key-badge">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F0A857" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

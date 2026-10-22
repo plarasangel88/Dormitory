@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\MaintenanceRequest;
+use App\Models\User;
+use App\Notifications\MaintenanceActivityNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class MaintenanceController extends Controller
@@ -18,22 +21,23 @@ class MaintenanceController extends Controller
     {
         $userId = auth()->id();
 
-        $requests = MaintenanceRequest::where('user_id', $userId)->with('room')
+        $requests = MaintenanceRequest::where('user_id', $userId)->with('room')->withCount('messages')
             ->latest()
             ->get();
         $selectedRequest = $requests->firstWhere('id', (int) request()->query('request'));
+        $selectedRequest?->load('messages.user');
 
-        $pendingCount    = $requests->where('status', 'pending')->count();
+        $pendingCount = $requests->where('status', 'pending')->count();
         $inProgressCount = $requests->where('status', 'in_progress')->count();
-        $resolvedCount   = $requests->where('status', 'completed')->count();
+        $resolvedCount = $requests->where('status', 'completed')->count();
 
         return view('student.maintenance', [
-            'requests'        => $requests,
+            'requests' => $requests,
             'selectedRequest' => $selectedRequest,
-            'totalCount'      => $requests->count(),
-            'pendingCount'    => $pendingCount,
+            'totalCount' => $requests->count(),
+            'pendingCount' => $pendingCount,
             'inProgressCount' => $inProgressCount,
-            'resolvedCount'   => $resolvedCount,
+            'resolvedCount' => $resolvedCount,
         ]);
     }
 
@@ -55,27 +59,35 @@ class MaintenanceController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'category'    => ['required', 'string', 'max:100'],
+            'category' => ['required', 'string', 'max:100'],
             'description' => ['required', 'string', 'max:2000'],
-            'priority'    => ['required', 'in:low,medium,high'],
+            'priority' => ['required', 'in:low,medium,high'],
         ]);
 
-        $user = auth()->user();
-        if (!$user->room_id) {
+        $user = $request->user();
+        if (! $user->room_id) {
             return back()->withErrors(['room' => 'You need an assigned room before submitting a maintenance request.'])->withInput();
         }
 
         // The schema stores the category in the title column; students do not enter a separate title.
-        $requestLabel = '[' . $validated['category'] . ']';
+        $requestLabel = '['.$validated['category'].']';
 
-        MaintenanceRequest::create([
-            'user_id'     => auth()->id(),
-            'title'       => $requestLabel,
-            'room_id'     => $user->room_id,
+        $maintenance = MaintenanceRequest::create([
+            'user_id' => $user->id,
+            'title' => $requestLabel,
+            'room_id' => $user->room_id,
             'description' => $validated['description'],
-            'priority'    => $validated['priority'],
-            'status'      => 'pending',
-        ]);
+            'priority' => $validated['priority'],
+            'status' => 'pending',
+        ])->load(['user', 'room']);
+
+        $admins = User::query()->where('role', 'admin')->get();
+        Notification::send($admins, new MaintenanceActivityNotification(
+            $maintenance->id,
+            $maintenance->status,
+            'New maintenance request',
+            $user->name.' submitted a '.strtolower($maintenance->priority).' priority request for Room '.($maintenance->room->room_number ?? 'unassigned').'.',
+        ));
 
         return redirect()
             ->route('maintenance.index')

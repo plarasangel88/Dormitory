@@ -576,6 +576,9 @@
                 <a href="{{ route('admin.dashboard') }}" class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fa-solid fa-house"></i> Dashboard
                 </a>
+                <a href="{{ route('admin.announcements.index') }}" class="menu-item {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-bullhorn"></i> Announcements
+                </a>
                 <a href="{{ route('admin.students.index') }}" class="menu-item {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-user-graduate"></i> Students
                 </a>
@@ -603,14 +606,16 @@
             <header class="top-header">
                 <div class="admin-page-heading"><strong>{{ $section === 'billing' ? 'Billing' : 'Payments' }}</strong><small>Manage student charges and transactions</small></div>
                 @if ($section === 'payments')
-                <form method="GET" class="search-bar">
+                <form method="GET" class="search-bar" role="search">
                     <input type="hidden" name="section" value="payments">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by student or reference no...">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by student or reference no..." aria-label="Search payments">
+                    <button type="submit" aria-label="Search payments"><i class="fa-solid fa-arrow-right"></i></button>
                 </form>
                 @else
                     <div></div>
                 @endif
+                @include('admin.partials.notification-bell')
                 <div class="admin-profile-badge">
                     <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
                     <div class="user-info">
@@ -691,7 +696,12 @@
                                     <td>₱{{ number_format($bill->electricity, 2) }}</td>
                                     <td>₱{{ number_format($bill->water, 2) }}</td>
                                     <td class="amount-cell">₱{{ number_format($bill->total, 2) }}</td>
-                                    <td>{{ $bill->due_date?->format('M d, Y') ?? '—' }}</td>
+                                    <td>
+                                        {{ $bill->due_date?->format('M d, Y') ?? '—' }}
+                                        @if ($bill->due_date?->isBefore(today()) && $bill->reminderBalance() > 0)
+                                            <div style="color:#9b3b37;font-size:11px;font-weight:700">Overdue</div>
+                                        @endif
+                                    </td>
                                     <td><span class="status-pill {{ $bill->balance <= 0 ? 'paid' : 'pending' }}">{{ $bill->balance <= 0 ? 'Settled' : '₱'.number_format($bill->balance, 2) }}</span></td>
                                     <td>
                                         <button type="button" class="icon-btn edit" onclick="openModal('editBill{{ $bill->id }}')" aria-label="Edit bill"><i class="fa-solid fa-pen"></i></button>
@@ -826,6 +836,7 @@
                                                 <i class="fa-solid fa-pen"></i>
                                             </button>
 
+                                            @if ($payment->status !== 'verified')
                                             <form action="{{ route('admin.payments.destroy', $payment) }}" method="POST" style="display:inline"
                                                   onsubmit="return confirm('Delete this payment record? This cannot be undone.');">
                                                 @csrf
@@ -834,6 +845,7 @@
                                                     <i class="fa-solid fa-trash"></i>
                                                 </button>
                                             </form>
+                                            @endif
                                         </td>
                                     </tr>
 
@@ -861,7 +873,7 @@
                                                     <div class="form-row">
                                                         <div class="form-group">
                                                             <label class="form-label">Amount</label>
-                                                            <input type="number" step="0.01" name="amount" class="form-control" value="{{ $payment->amount }}" min="0" required>
+                                                            <input type="number" step="0.01" name="amount" class="form-control" value="{{ $payment->amount }}" min="0.01" required>
                                                         </div>
                                                         <div class="form-group">
                                                             <label class="form-label">Payment Date</label>

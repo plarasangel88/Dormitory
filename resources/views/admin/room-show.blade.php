@@ -43,6 +43,7 @@
             <div class="sidebar-brand"><i class="fa-solid fa-building-user"></i><span>Dorm Portal</span></div>
             <nav class="sidebar-menu">
                 <a href="{{ route('admin.dashboard') }}" class="menu-item"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a href="{{ route('admin.announcements.index') }}" class="menu-item {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}"><i class="fa-solid fa-bullhorn"></i> Announcements</a>
                 <a href="{{ route('admin.students.index') }}" class="menu-item"><i class="fa-solid fa-user-graduate"></i> Students</a>
                 <a href="{{ route('admin.rooms.index') }}" class="menu-item active"><i class="fa-solid fa-door-closed"></i> Rooms</a>
                 <a href="{{ route('admin.payments.index') }}" class="menu-item"><i class="fa-solid fa-wallet"></i> Payments &amp; Billing</a>
@@ -54,10 +55,12 @@
         <main class="main-content">
             <header class="top-header">
                 <div class="admin-page-heading"><strong>Room {{ $room->room_number }}</strong><small>Room assignment and tenant details</small></div>
-                <form method="GET" action="{{ route('admin.rooms.index') }}" class="search-bar">
+                <form method="GET" action="{{ route('admin.rooms.index') }}" class="search-bar" role="search">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by room number..." aria-label="Search rooms">
+                    <button type="submit" aria-label="Search rooms"><i class="fa-solid fa-arrow-right"></i></button>
                 </form>
+                @include('admin.partials.notification-bell')
                 <div class="admin-profile-badge"><div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div><div class="user-info"><span class="user-name">{{ auth()->user()->name }}</span><span class="user-role">ADMIN</span></div></div>
             </header>
             <div class="dashboard-body">
